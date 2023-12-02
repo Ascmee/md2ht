@@ -1,142 +1,432 @@
+#include <map>
 #include "console_util.h"
+#include "file_util.hpp"
 
 int console_util::_argc = 0;
-char** console_util::_argv = nullptr;
+char **console_util::_argv = nullptr;
 string console_util::parameters[18] = {
-        "-h","--help","-o","--output",
-        "-a","--author","-c","--classify",
-        "-in","--index","-cs","--classifications",
-        "-pr","--project","-ab","--about",
-        "-h","--has"};
+        "-h", "--help", "-o", "--output",
+        "-a", "--author", "-c", "--classify",
+        "-in", "--index", "-cs", "--classifications",
+        "-pr", "--project", "-ab", "--about",
+        "--has", "--has"};
 ::Status console_util::status;
+bool console_util::isFile = false;
 
-void console_util::init(int argc, char** argv){
+void console_util::init(int argc, char **argv) {
     _argc = argc;
     _argv = argv;
 }
 
-void console_util::printHelp(){
-    cout << "Usage: md2hm [options] file\n"
+void console_util::printHelp() {
+    cout << "Usage: md2ht [options] file\n"
             "Options:\n"
-            "        -h  --help              œ‘ æ∞Ô÷˙–≈œ¢\n"
-            "        -o  --output            Œƒ’¬µƒ±ÍÃ‚£¨√ª”– ‰»Î£¨æÕƒ¨»œŒƒº˛√˚\n"
-            "        -a  --author            œ‘ æµƒ≤©÷˜√˚◊÷£¨µ⁄“ª¥Œ π”√ ±–Ë“™÷∏∂®£¨∫Û–¯ø…“‘≤ª÷∏∂®\n"
-            "        -c  --classify          Œƒ’¬À˘ Ùµƒ∑÷¿‡£¨»∑±£∂‘”¶µƒ∑÷¿‡¥Ê‘⁄£¨∑Ò‘ÚΩ´≤ªª·Œ™∆‰∑÷¿‡\n"
-            "        -in --index             ÷∏∂®∏√Œƒ’¬Œ™index.html÷–À˘œ‘ æµƒƒ⁄»›£¨Œƒ’¬ƒ⁄»›¥π÷±æ”÷–£¨¥À ±ª·Œﬁ ”-o≤Œ ˝\n"
-            "        -cs --classifications   ÷∏∂®∑÷¿‡÷–µƒ¿‡–Õ£¨◊Ó…Ÿ4∏ˆ£¨◊Ó∂‡9∏ˆ£¨◊Ó∫Û“ª∏ˆŒ™ƒ¨»œ∑÷¿‡£¨µ⁄“ª¥Œ±ÿ–Î÷∏∂®\n"
-            "        -pr --project           ÷∏∂®∏√Œƒº˛Œ™œÓƒøµƒŒƒº˛£¨‘⁄≤Œ ˝∫Û√Ê–Ë“™∏˙ÀÊœÓƒøµƒ¡¥Ω”\n"
-            "        -ab --about             ÷∏∂®∏√Œƒ’¬Œ™about.html÷–œ‘ æµƒƒ⁄»›£¨¥À ±ª·Œﬁ ”-o≤Œ ˝\n"
-            "        -h  --has               ÷∏∂®“—æ≠¥Ê‘⁄µƒ≤©øÕŒƒº˛º–µƒ¬∑æ∂£¨»Ù «√ª”–÷∏∂®£¨‘Úª·–¬Ω®≤©øÕ\n"
+            "        -h  --help              ÊòæÁ§∫Â∏ÆÂä©‰ø°ÊÅØ\n"
+            "        -o  --output            ÊñáÁ´†ÁöÑÊ†áÈ¢òÔºåÊ≤°ÊúâËæìÂÖ•ÔºåÂ∞±ÈªòËÆ§Êñá‰ª∂Âêç\n"
+            "        -a  --author            ÊòæÁ§∫ÁöÑÂçö‰∏ªÂêçÂ≠óÔºåÂêçÂ≠óÂêéÈù¢ÈúÄË¶ÅË∑üÈöèËá™Â∑±ÁöÑgithubÈ°µÈù¢ÊàñÂÖ∂‰ªñÁΩëÂùÄÔºåÁ¨¨‰∏ÄÊ¨°‰ΩøÁî®Êó∂ÈúÄË¶ÅÊåáÂÆöÔºåÂêéÁª≠ÂèØ‰ª•‰∏çÊåáÂÆö\n"
+            "        -c  --classify          ÊñáÁ´†ÊâÄÂ±ûÁöÑÂàÜÁ±ªÔºåÁ°Æ‰øùÂØπÂ∫îÁöÑÂàÜÁ±ªÂ≠òÂú®ÔºåÂê¶ÂàôÂ∞Ü‰∏ç‰ºö‰∏∫ÂÖ∂ÂàÜÁ±ª\n"
+            "        -in --index             ÊåáÂÆöËØ•ÊñáÁ´†‰∏∫index.html‰∏≠ÊâÄÊòæÁ§∫ÁöÑÂÜÖÂÆπÔºåÊñáÁ´†ÂÜÖÂÆπÂûÇÁõ¥Â±Ö‰∏≠ÔºåÊ≠§Êó∂‰ºöÊó†ËßÜ-oÂèÇÊï∞\n"
+            "        -cs --classifications   ÊåáÂÆöÂàÜÁ±ª‰∏≠ÁöÑÁ±ªÂûãÔºåÊúÄÂ∞ë4‰∏™ÔºåÊúÄÂ§ö9‰∏™ÔºåÊúÄÂêé‰∏Ä‰∏™‰∏∫ÈªòËÆ§ÂàÜÁ±ªÔºåÁ¨¨‰∏ÄÊ¨°ÂøÖÈ°ªÊåáÂÆö\n"
+            "        -pr --project           ÊåáÂÆöËØ•Êñá‰ª∂‰∏∫È°πÁõÆÁöÑÊñá‰ª∂ÔºåÂú®ÂèÇÊï∞ÂêéÈù¢ÈúÄË¶ÅË∑üÈöèÈ°πÁõÆÁöÑÈìæÊé•\n"
+            "        -ab --about             ÊåáÂÆöËØ•ÊñáÁ´†‰∏∫about.html‰∏≠ÊòæÁ§∫ÁöÑÂÜÖÂÆπÔºåÊ≠§Êó∂‰ºöÊó†ËßÜ-oÂèÇÊï∞\n"
+            "        --has                   ÊåáÂÆöÂ∑≤ÁªèÂ≠òÂú®ÁöÑÂçöÂÆ¢Êñá‰ª∂Â§πÁöÑË∑ØÂæÑÔºåËã•ÊòØÊ≤°ÊúâÊåáÂÆöÔºåÂàô‰ºöÊñ∞Âª∫ÂçöÂÆ¢ÔºåÊåáÂÆöÂêéÔºåÂêéÁª≠ÈÉΩ‰ºöÁî®Ëøô‰∏™ÁõÆÂΩï\n"
             "\n"
-            "∏√≥Ã–Ú±ÿ–Î“™‘⁄”–∞≤◊∞gitµƒª∑æ≥œ¬ π”√£¨“‘øÀ¬°∂‘”¶µƒ≤©øÕƒ£∞Â£¨¥”∂¯Ω¯–––ﬁ∏ƒ\n"
-            "≤˙…˙µƒ“≥√ÊΩ´ª·‘⁄±£¥Ê‘⁄∂‘”¶µƒ÷∏∂®µƒŒƒº˛º–÷–∂‘”¶µƒŒª÷√£¨”…”√ªßΩ´≤©øÕ…œ¥´µΩ◊‘º∫µƒ∑˛ŒÒ∆˜ªÚ¥˙¬ÎÕ–π‹∆ΩÃ®’‚ «Ω´markdown ◊™ªØŒ™¥À≤©øÕƒ£∞ÂÀ˘–ËµƒhtmlŒƒº˛∂¯◊ˆµƒ£¨”…”⁄Œ“√«—ß“’≤ªæ´£¨À˘“‘ø…ƒ‹ª·”–¥ÌŒÛ£¨»Áπ˚ø…“‘£¨«ÎœÚŒ“√«Ã·≥ˆ\n"
-            "…˘√˜£∫±æ≥Ã–Úø™‘¥£¨≤©øÕƒ£∞Â“≤ «ø™‘¥µƒ£¨æ˘ø…“‘‘⁄github…œ≤Èø¥µΩ";
+            "ËØ•Á®ãÂ∫èÂøÖÈ°ªË¶ÅÂú®ÊúâÂÆâË£ÖgitÁöÑÁéØÂ¢É‰∏ã‰ΩøÁî®Ôºå‰ª•ÂÖãÈöÜÂØπÂ∫îÁöÑÂçöÂÆ¢Ê®°ÊùøÔºå‰ªéËÄåËøõË°å‰øÆÊîπ\n"
+            "‰∫ßÁîüÁöÑÈ°µÈù¢Â∞Ü‰ºöÂú®‰øùÂ≠òÂú®ÂØπÂ∫îÁöÑÊåáÂÆöÁöÑÊñá‰ª∂Â§π‰∏≠ÂØπÂ∫îÁöÑ‰ΩçÁΩÆÔºåÁî±Áî®Êà∑Â∞ÜÂçöÂÆ¢‰∏ä‰º†Âà∞Ëá™Â∑±ÁöÑÊúçÂä°Âô®Êàñ‰ª£Á†ÅÊâòÁÆ°Âπ≥Âè∞ËøôÊòØÂ∞Ümarkdown ËΩ¨Âåñ‰∏∫Ê≠§ÂçöÂÆ¢Ê®°ÊùøÊâÄÈúÄÁöÑhtmlÊñá‰ª∂ËÄåÂÅöÁöÑÔºåÁî±‰∫éÊàë‰ª¨Â≠¶Ëâ∫‰∏çÁ≤æÔºåÊâÄ‰ª•ÂèØËÉΩ‰ºöÊúâÈîôËØØÔºåÂ¶ÇÊûúÂèØ‰ª•ÔºåËØ∑ÂêëÊàë‰ª¨ÊèêÂá∫\n"
+            "Â£∞ÊòéÔºöÊú¨Á®ãÂ∫èÂºÄÊ∫êÔºåÂçöÂÆ¢Ê®°Êùø‰πüÊòØÂºÄÊ∫êÁöÑÔºåÂùáÂèØ‰ª•Âú®github‰∏äÊü•ÁúãÂà∞";
 }
 
-void console_util::matchParameter(){
-    if(_argc == 1){
-        printHelp();
-        return;
-    }else {
-        int check_result = checkParameter();
-        if(check_result == status.error)
-            exit(-1);
-        else if(check_result == status.help){
-            printHelp();
-            exit(0);
-        }else if(check_result != status.success){
-            // “‘∑¿ÕÚ“ª£¨∑Ω±„∫Û–¯µƒ–ﬁ∏ƒ
-            exit(-1);
-        }
-        // Ω¯––√¸¡ÓµƒΩ‚Œˆ”Î÷¥––
-        set<char*> classifications;
-        console_util::parseParameter(classifications);
-    }
-}
-
-void console_util::parseParameter(set<char*>& classifications) {
-    set<int> contain_parameters;
-    bool classification = false;
-    bool contain_parameter = false;
-    for(int i = 1;i < _argc - 1;i++){
-        LOOP:
-        for(int j = 0;j < 18;j++){
-            if(_argv[i] == parameters[j]){
-                contain_parameters.insert(j);
-                if(j % 2 == 0)
-                    contain_parameters.insert(j + 1);
-                else
-                    contain_parameters.insert(j - 1);
-                contain_parameter = true;
-                classification = false;
-                if(j == 6 || j == 7)
-                    classification = true;
-                i++;
-                goto LOOP;
-            }else if(classification){
-                classifications.insert(_argv[i]);
-                break;
-            }
-        }
-        if(contain_parameter)
-            contain_parameter = false;
-    }
-    if(!file_util::fileExist(string(_argv[_argc - 1]))){
-        cerr << "\033[31m" << "Œƒº˛≤ª¥Ê‘⁄£∫" << _argv[_argc - 1] << "\033[0m";
+void console_util::gitClone() {
+    system("cls");
+    if (system("git -v")) {
+        system("cls");
+        cerr << "\033[31m" << "ËØ∑Ê£ÄÊü•gitÁéØÂ¢É" << "\033[0m";
         exit(-1);
     }
+    string str = "123";
+    str += "5423";
+    system("git clone https://github.com/Ascmee/blog_template.git");
+    fileInfo.dir_path = "blog_template";
+    fileInfo.hasDir = false;
+    file_util::writeTo("cache\\has.txt",fileInfo.dir_path);
 }
 
-short int console_util::checkParameter() {
-    set<int> contain_parameters;
-    bool classification = false;
-    short int classification_num = 0;
-    bool contain_parameter = false;
-    for(int i = 1;i < _argc;i++){
-        LOOP:
-        for(int j = 0;j < 18;j++){
-            if(_argv[i] == parameters[j]){
-                if(contain_parameters.find(j) != contain_parameters.end()) {
-                    cerr << "\033[31m" << "÷ÿ∏¥≤Œ ˝£∫" << _argv[i] << "\033[0m";
-                    return status.error;
-                }
-                if(classification && classification_num < 4){
-                    cerr << "\033[31m" << "∑÷¿‡◊Ó…ŸŒ™4∏ˆ" << "\033[0m";
-                    return status.error;
-                }
-                contain_parameters.insert(j);
-                if(j % 2 == 0)
-                    contain_parameters.insert(j + 1);
-                else
-                    contain_parameters.insert(j - 1);
-                contain_parameter = true;
-                classification = false;
-                if(j == 6 || j == 7){
-                    classification = true;
-                }else if(j == 0 || j == 1){
-                    return status.help;
-                }
-                i++;
-                goto LOOP;
-            }else if(classification){
-                classification_num++;
-                if(classification_num > 9){
-                    cerr << "\033[31m" << "∑÷¿‡◊Ó∂‡Œ™9∏ˆ" << "\033[0m";
-                    return status.error;
-                }
-                break;
-            } else if(j == 17){
-                cerr << "\033[31m" << "Œ¥÷™√¸¡Ó£∫" << _argv[i] << "\033[0m";
-                return status.error;
+void console_util::matchParameter() {
+    if (_argc == 1) {
+        printHelp();
+        return;
+    } else {
+        map<int, int> contain_parameters;
+        vector<string> classifications;
+        int check_result = checkParameter(contain_parameters, classifications);
+        if (check_result == status.error)
+            exit(-1);
+        else if (check_result == status.help) {
+            printHelp();
+            exit(0);
+        } else if (check_result != status.success) {
+            // ‰ª•Èò≤‰∏á‰∏ÄÔºåÊñπ‰æøÂêéÁª≠ÁöÑ‰øÆÊîπ
+            exit(-1);
+        }
+        // ÈÅøÂÖçÂëΩ‰ª§ÁöÑÂÜ≤Á™Å
+        if (contain_parameters.count(8)) {
+            if (contain_parameters.count(2)) {
+                cerr << "\033[31m" << _argv[contain_parameters[8]] << "‰∏é" << _argv[contain_parameters[2]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
+            } else if (contain_parameters.count(6)) {
+                cerr << "\033[31m" << _argv[contain_parameters[8]] << "‰∏é" << _argv[contain_parameters[6]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
+            } else if (contain_parameters.count(12)) {
+                cerr << "\033[31m" << _argv[contain_parameters[8]] << "‰∏é" << _argv[contain_parameters[12]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
+            } else if (contain_parameters.count(14)) {
+                cerr << "\033[31m" << _argv[contain_parameters[8]] << "‰∏é" << _argv[contain_parameters[14]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
             }
         }
-        if(contain_parameter)
-            contain_parameter = false;
+        if (contain_parameters.count(12)) {
+            if (contain_parameters.count(14)) {
+                cerr << "\033[31m" << _argv[contain_parameters[12]] << "‰∏é" << _argv[contain_parameters[14]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
+            }
+        }
+        if (contain_parameters.count(14)) {
+            if (contain_parameters.count(2)) {
+                cerr << "\033[31m" << _argv[contain_parameters[14]] << "‰∏é" << _argv[contain_parameters[2]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
+            } else if (contain_parameters.count(6)) {
+                cerr << "\033[31m" << _argv[contain_parameters[14]] << "‰∏é" << _argv[contain_parameters[6]] << "‰∏çËÉΩ‰∏ÄËµ∑‰ΩøÁî®"
+                     << "\033[0m";
+                exit(-1);
+            }
+        }
+        // ËøõË°åÂëΩ‰ª§ÁöÑËß£Êûê‰∏éÊâßË°å
+        console_util::parseParameter(contain_parameters, classifications);
     }
-    if(classification && classification_num < 4){
-        cerr << "\033[31m" << "∑÷¿‡◊Ó…ŸŒ™4∏ˆ" << "\033[0m";
-        return status.error;
-    }
-    return status.success;
 }
 
+void console_util::parseParameter(map<int, int> &contain_parameters, vector<string> &classifications) {
+    // has
+    if (contain_parameters.count(16)) {
+        fileInfo.dir_path = _argv[contain_parameters[16] + 1];
+        if(!file_util::hasDir("cache"))
+            system("mkdir cache");
+        file_util::writeTo("cache\\has.txt",fileInfo.dir_path);
+    } else if(file_util::fileExist("cache\\has.txt"))
+        fileInfo.dir_path = file_util::readFrom("cache\\has.txt");
+    else gitClone();
+    // output
+    if (contain_parameters.count(2))
+        fileInfo.output_name = _argv[contain_parameters[2] + 1];
+    // author
+    if (contain_parameters.count(4))
+        file_util::writeAuthor(_argv[contain_parameters[4] + 1], _argv[contain_parameters[4] + 2]);
+    // classification
+    if (contain_parameters.count(6))
+        fileInfo.classification = _argv[contain_parameters[6] + 1];
+    // index
+    if (contain_parameters.count(8))
+        file_util::writeIndex();
+        // classifications
+    else if (contain_parameters.count(10))
+        file_util::writeClassifications(classifications);
+        // projects
+    else if (contain_parameters.count(12))
+        file_util::writeProject(_argv[contain_parameters[12] + 1]);
+        // about
+    else if (contain_parameters.count(14))
+        file_util::writeAbout();
+    else if (isFile)
+        file_util::writeArticles();
+}
+
+short console_util::checkParameter(map<int, int> &contain_parameters, vector<string> &classifications) {
+    int classification_num = 0, parameter_num = 0, author_num = 0;
+    bool parameter = false, classification = false, author = false, has = false, project = false;
+    string last_parameter;
+    for (int i = 1; i < _argc - 1; i++) {
+        LOOP:
+        if (i >= _argc - 1)
+            break;
+        for (int j = 0; j < 18; j++) {
+            if (_argv[i] == parameters[j]) {
+                if (parameter || author || has || project) {
+                    if (parameter_num == 0) {
+                        cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "Ê≤°ÊúâÂÄº" << "\033[0m";
+                        return status.error;
+                    }
+
+                    if (author && author_num != 2) {
+                        cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "Ë¶ÅÊúâ‰∏§‰∏™ÂÄº" << "\033[0m";
+                        return status.error;
+                    }
+                }
+                if (classification && classification_num < 4) {
+                    cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "ÂÄºÊúÄÂ∞ë‰∏∫4‰∏™" << "\033[0m";
+                    return status.error;
+                }
+
+                if (contain_parameters.count(j) == 1) {
+                    cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "‰∏çÂèØÈáçÂ§ç" << "\033[0m";
+                    return status.error;
+                }
+
+                classification = false;
+                parameter = false;
+                parameter_num = 0;
+                classification_num = 0;
+                last_parameter = parameters[j];
+                contain_parameters.insert(pair<int, int>(j, i));
+
+                if (j % 2 == 0)
+                    contain_parameters.insert(pair<int, int>(j + 1, i));
+                else
+                    contain_parameters.insert(pair<int, int>(j - 1, i));
+
+                if (j == 10 || j == 11)
+                    classification = true;
+                else if (j == 0 || j == 1)
+                    return status.help;
+                else if (j == 4 || j == 5)
+                    author = true;
+                else if (j == 16 || j == 17)
+                    has = true;
+                else if (j == 12 || j == 13)
+                    project = true;
+                else if (j < 8)
+                    parameter = true;
+
+                i++;
+                goto LOOP;
+            }
+        }
+
+        if (parameter) {
+            parameter_num++;
+            parameter = false;
+            if (last_parameter == "-o" || last_parameter == "--output")
+                if (!nameCheck(_argv[i], "ÂçöÂÆ¢ÁöÑÊ†áÈ¢òÂêç"))
+                    return status.error;
+        } else if (classification) {
+            classification_num++;
+            if (count(classifications.begin(), classifications.end(), _argv[i])) {
+                cerr << "\033[31m" << "ÂàÜÁ±ª‰∏çÂèØ‰ª•ÈáçÂ§ç" << "\033[0m";
+                return status.error;
+            }
+
+            classifications.emplace_back(_argv[i]);
+            if (classification_num > 9) {
+                cerr << "\033[31m" << "ÂàÜÁ±ªÊúÄÂ§ö‰∏∫9‰∏™" << "\033[0m";
+                return status.error;
+            }
+        } else if (project) {
+            project = false;
+            regex r("https://.{5,}");
+            if (!regex_match(_argv[i], r)) {
+                cerr << "\033[31m" << last_parameter << "ÁöÑÂÄºÂøÖÈ°ªÊòØÁΩëÂùÄ" << "\033[0m";
+                return status.error;
+            }
+        } else if (has) {
+            has = false;
+            if (!file_util::isTargetDir(_argv[i])) return status.error;
+        } else if (author) {
+            author_num++;
+            if (author_num == 2)
+                author = false;
+            else if (!nameCheck(_argv[i], "Âçö‰∏ªÁöÑÂêçÂ≠ó")) return status.error;
+        } else {
+            cerr << "\033[31m" << "Êú™Áü•ÂèÇÊï∞" << _argv[i] << "\033[0m";
+            return status.error;
+        }
+    }
+
+    for (int j = 0; j < 18; j++) {
+        if (_argv[_argc - 1] == parameters[j]) {
+            if (parameter || author || has) {
+                if (parameter_num == 0) {
+                    cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "Ê≤°ÊúâÂÄº" << "\033[0m";
+                    return status.error;
+                }
+            }
+            if (classification && classification_num < 4) {
+                cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "ÂÄºÊúÄÂ∞ë‰∏∫4‰∏™" << "\033[0m";
+                return status.error;
+            }
+
+            if (contain_parameters.count(j) == 1) {
+                cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "‰∏çÂèØÈáçÂ§ç" << "\033[0m";
+                return status.error;
+            }
+
+            last_parameter = _argv[_argc - 1];
+            if (j == 0 || j == 1) {
+                return status.help;
+            } else if (j == 10 || j == 11) {
+                cerr << "\033[31m" << "ÂàÜÁ±ªÊúÄÂ∞ë‰∏∫4‰∏™" << "\033[0m";
+                return status.error;
+            } else if (j >= 8 && j <= 15) {
+                parameter = true;
+                break;
+            }
+
+            cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "Ê≤°ÊúâÂÄº" << "\033[0m";
+            return status.error;
+        }
+    }
+
+    if (project) {
+        regex r("https://.{5,}");
+        if (!regex_match(_argv[_argc - 1], r)) {
+            cerr << "\033[31m" << last_parameter << "ÁöÑÂÄºÂøÖÈ°ªÊòØÁΩëÂùÄ" << "\033[0m";
+            return status.error;
+        }
+    }
+
+    if (has) {
+        if (!file_util::isTargetDir(_argv[_argc - 1])) return status.error;
+        if (contain_parameters.count(4) || contain_parameters.count(10))
+            if (!mustHaveFile(contain_parameters)) return status.success;
+        cerr << "\033[31m" << "Êú™ÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+        return status.error;
+    }
+
+    if (author) {
+        if (author_num == 0) {
+            if (!nameCheck(_argv[_argc - 1], "Âçö‰∏ªÁöÑÂêçÂ≠ó")) return status.error;
+            cerr << "\033[31m" << last_parameter << "Êú™ÊåáÂÆöÈìæÊé•" << "\033[0m";
+            return status.error;
+        } else if (author_num == 1) {
+            regex r("https://.{5,}");
+            if (regex_match(_argv[_argc - 1], r)) {
+                if (!mustHaveFile(contain_parameters)) return status.success;
+                cerr << "\033[31m" << "Êú™ÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+                return status.error;
+            }
+            cerr << "\033[31m" << "ÊåáÂÆöÁöÑÈìæÊé•ÂøÖÈ°ª‰ª•https://ÂºÄÂ§¥" << "\033[0m";
+            return status.error;
+        }
+    }
+
+    if (classification) {
+        if (classification_num < 3) {
+            cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "ÂÄºÊúÄÂ∞ë‰∏∫4‰∏™" << "\033[0m";
+            return status.error;
+        } else if (classification_num >= 9) {
+            cerr << "\033[31m" << "ÂèÇÊï∞" << last_parameter << "ÂÄºÊúÄÂ§ö‰∏∫9‰∏™" << "\033[0m";
+            return status.error;
+        } else if (std::count(classifications.begin(), classifications.end(), _argv[_argc - 1])) {
+            cerr << "\033[31m" << "ÂàÜÁ±ª‰∏çÂèØ‰ª•ÈáçÂ§ç" << "\033[0m";
+            return status.error;
+        } else {
+            classifications.emplace_back(_argv[_argc - 1]);
+            if (contain_parameters.count(2)) {
+                cerr << "\033[31m" << "ÊåáÂÆö‰∫Ü" << _argv[contain_parameters[2]] << "ÂèÇÊï∞ÔºåÈúÄË¶ÅÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+                return status.error;
+            } else if (contain_parameters.count(6)) {
+                cerr << "\033[31m" << "ÊåáÂÆö‰∫Ü" << _argv[contain_parameters[6]] << "ÂèÇÊï∞ÔºåÈúÄË¶ÅÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+                return status.error;
+            } else if (contain_parameters.count(8)) {
+                cerr << "\033[31m" << "ÊåáÂÆö‰∫Ü" << _argv[contain_parameters[8]] << "ÂèÇÊï∞ÔºåÈúÄË¶ÅÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+                return status.error;
+            } else if (contain_parameters.count(12)) {
+                cerr << "\033[31m" << "ÊåáÂÆö‰∫Ü" << _argv[contain_parameters[12]] << "ÂèÇÊï∞ÔºåÈúÄË¶ÅÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+                return status.error;
+            } else if (contain_parameters.count(14)) {
+                cerr << "\033[31m" << "ÊåáÂÆö‰∫Ü" << _argv[contain_parameters[14]] << "ÂèÇÊï∞ÔºåÈúÄË¶ÅÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+                return status.error;
+            }
+            if (!mustHaveFile(contain_parameters)) return status.success;
+            cerr << "\033[31m" << "Êú™ÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+            return status.error;
+        }
+
+    }
+
+    if (parameter && parameter_num == 0) {
+        if (!nameCheck(_argv[_argc - 1], "ÂçöÂÆ¢ÁöÑÊ†áÈ¢òÂêç")) return status.error;
+        cerr << "\033[31m" << "Êú™ÊåáÂÆöÊñá‰ª∂" << "\033[0m";
+        return status.error;
+    }
+
+    if (file_util::fileExist(_argv[_argc - 1])) {
+        string str(_argv[_argc - 1]);
+        regex r(".{1,}\\.md");
+        if (!regex_match(str, r)) {
+            cerr << "\033[31m" << "Êñá‰ª∂Âè™ËÉΩÊòØmdÊ†ºÂºèÁöÑ" << "\033[0m";
+            return status.error;
+        }
+        console_util::isFile = true;
+        return status.success;
+    }
+
+    cerr << "\033[31m" << _argv[_argc - 1] << "Êñá‰ª∂‰∏çÂ≠òÂú®" << "\033[0m";
+    return status.error;
+}
+
+bool console_util::mustHaveFile(map<int, int> &contain_parameters) {
+    if (contain_parameters.count(2) || contain_parameters.count(6) || contain_parameters.count(8) ||
+        contain_parameters.count(12) || contain_parameters.count(14))
+        return true;
+    return false;
+}
+
+bool console_util::nameCheck(char *arg, const string &name) {
+    string str(arg);
+    if (arg[0] == '-') {
+        cerr << "\033[31m" << name << "‰∏çÂèØ‰ª•-ÂºÄÂ§¥" << "\033[0m";
+        return false;
+    }
+    for (const char &c: str) {
+        switch (c) {
+            case '&':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´&" << "\033[0m";
+                return false;
+            case '?':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´?" << "\033[0m";
+                return false;
+            case '=':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´=" << "\033[0m";
+                return false;
+            case '.':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´." << "\033[0m";
+                return false;
+            case '/':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´/" << "\033[0m";
+                return false;
+            case '"':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´\"" << "\033[0m";
+                return false;
+            case '\'':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´\'" << "\033[0m";
+                return false;
+            case '!':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´!" << "\033[0m";
+                return false;
+            case '$':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´$" << "\033[0m";
+                return false;
+            case '^':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´^" << "\033[0m";
+                return false;
+            case ';':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´;" << "\033[0m";
+                return false;
+            case '[':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´[" << "\033[0m";
+                return false;
+            case ']':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´]" << "\033[0m";
+                return false;
+            case '{':
+                cerr << "\033[31m" << name << "‰∏≠‰∏çÂèØÂåÖÂê´}" << "\033[0m";
+                return false;
+        }
+    }
+    return true;
+}

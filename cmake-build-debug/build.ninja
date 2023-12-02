@@ -51,31 +51,25 @@ build cmake_object_order_depends_target_Cl_MdToHTML: phony || CMakeFiles/Cl_MdTo
 
 build CMakeFiles/Cl_MdToHTML.dir/main.cpp.obj: CXX_COMPILER__Cl_MdToHTML_unscanned_Debug D$:/Project/CoCPP/Cl_MdToHTML/main.cpp || cmake_object_order_depends_target_Cl_MdToHTML
   DEP_FILE = CMakeFiles\Cl_MdToHTML.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++2a -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\Cl_MdToHTML.dir
   OBJECT_FILE_DIR = CMakeFiles\Cl_MdToHTML.dir
 
 build CMakeFiles/Cl_MdToHTML.dir/name_arr.cpp.obj: CXX_COMPILER__Cl_MdToHTML_unscanned_Debug D$:/Project/CoCPP/Cl_MdToHTML/name_arr.cpp || cmake_object_order_depends_target_Cl_MdToHTML
   DEP_FILE = CMakeFiles\Cl_MdToHTML.dir\name_arr.cpp.obj.d
-  FLAGS = -g -std=gnu++2a -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\Cl_MdToHTML.dir
   OBJECT_FILE_DIR = CMakeFiles\Cl_MdToHTML.dir
 
 build CMakeFiles/Cl_MdToHTML.dir/console_util.cpp.obj: CXX_COMPILER__Cl_MdToHTML_unscanned_Debug D$:/Project/CoCPP/Cl_MdToHTML/console_util.cpp || cmake_object_order_depends_target_Cl_MdToHTML
   DEP_FILE = CMakeFiles\Cl_MdToHTML.dir\console_util.cpp.obj.d
-  FLAGS = -g -std=gnu++2a -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\Cl_MdToHTML.dir
   OBJECT_FILE_DIR = CMakeFiles\Cl_MdToHTML.dir
 
 build CMakeFiles/Cl_MdToHTML.dir/data_convert.cpp.obj: CXX_COMPILER__Cl_MdToHTML_unscanned_Debug D$:/Project/CoCPP/Cl_MdToHTML/data_convert.cpp || cmake_object_order_depends_target_Cl_MdToHTML
   DEP_FILE = CMakeFiles\Cl_MdToHTML.dir\data_convert.cpp.obj.d
-  FLAGS = -g -std=gnu++2a -fdiagnostics-color=always
-  OBJECT_DIR = CMakeFiles\Cl_MdToHTML.dir
-  OBJECT_FILE_DIR = CMakeFiles\Cl_MdToHTML.dir
-
-build CMakeFiles/Cl_MdToHTML.dir/file_util.cpp.obj: CXX_COMPILER__Cl_MdToHTML_unscanned_Debug D$:/Project/CoCPP/Cl_MdToHTML/file_util.cpp || cmake_object_order_depends_target_Cl_MdToHTML
-  DEP_FILE = CMakeFiles\Cl_MdToHTML.dir\file_util.cpp.obj.d
-  FLAGS = -g -std=gnu++2a -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\Cl_MdToHTML.dir
   OBJECT_FILE_DIR = CMakeFiles\Cl_MdToHTML.dir
 
@@ -87,7 +81,7 @@ build CMakeFiles/Cl_MdToHTML.dir/file_util.cpp.obj: CXX_COMPILER__Cl_MdToHTML_un
 #############################################
 # Link the executable Cl_MdToHTML.exe
 
-build Cl_MdToHTML.exe: CXX_EXECUTABLE_LINKER__Cl_MdToHTML_Debug CMakeFiles/Cl_MdToHTML.dir/main.cpp.obj CMakeFiles/Cl_MdToHTML.dir/name_arr.cpp.obj CMakeFiles/Cl_MdToHTML.dir/console_util.cpp.obj CMakeFiles/Cl_MdToHTML.dir/data_convert.cpp.obj CMakeFiles/Cl_MdToHTML.dir/file_util.cpp.obj
+build Cl_MdToHTML.exe: CXX_EXECUTABLE_LINKER__Cl_MdToHTML_Debug CMakeFiles/Cl_MdToHTML.dir/main.cpp.obj CMakeFiles/Cl_MdToHTML.dir/name_arr.cpp.obj CMakeFiles/Cl_MdToHTML.dir/console_util.cpp.obj CMakeFiles/Cl_MdToHTML.dir/data_convert.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Cl_MdToHTML.dir

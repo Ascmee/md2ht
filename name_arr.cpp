@@ -1,6 +1,6 @@
 
 #include "name_arr.h"
-name_arr n1;
+
 int name_arr::data_edit(const std::string &data_str)
 {
     this->data = data_str;

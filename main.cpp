@@ -10,7 +10,8 @@ using namespace std;
 
 int main(int argc,char* argv[])
 {
-
+    system("chcp 65001");
+    system("cls");
     vector<name_arr> v1;
     string ori_data,ori_title,ori_classification;
     string user_input;

@@ -1,6 +1,9 @@
 #include <iostream>
 #include <set>
-#include "file_util.h"
+#include <map>
+#include <vector>
+#include <regex>
+
 using namespace std;
 
 #ifndef CL_MDTOHTML_CONSOLE_UTIL_H
@@ -18,8 +21,11 @@ public:
     static void init(int argc,char** argv);
     static void matchParameter();
     static void printHelp();
-    static short int checkParameter();
-    static void parseParameter(set<char*>& classifications);
+    static short checkParameter(map<int, int> &contain_parameters, vector<string> &classifications);
+    static void parseParameter(map<int, int> &contain_parameters, vector<string>& classifications);
+    static bool nameCheck(char* arg,const string& name);
+    static bool mustHaveFile(map<int, int> &contain_parameters);
+    static void gitClone();
 
 
 private:
@@ -27,6 +33,7 @@ private:
     static char** _argv;
     static string parameters[18];
     static Status status;
+    static bool isFile;
 };
 
 
