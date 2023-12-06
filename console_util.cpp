@@ -4,12 +4,12 @@
 
 int console_util::_argc = 0;
 char **console_util::_argv = nullptr;
-string console_util::parameters[18] = {
+string console_util::parameters[20] = {
         "-h", "--help", "-o", "--output",
         "-a", "--author", "-c", "--classify",
         "-in", "--index", "-cs", "--classifications",
         "-pr", "--project", "-ab", "--about",
-        "--has", "--has"};
+        "--has", "--has", "-r", "--remove"};
 ::Status console_util::status;
 bool console_util::isFile = false;
 
@@ -22,13 +22,14 @@ void console_util::printHelp() {
     cout << "Usage: md2ht [options] file\n"
             "Options:\n"
             "        -h  --help              显示帮助信息\n"
-            "        -o  --output            文章的标题，没有输入，就默认文件名\n"
+            "        -o  --output            文章的标题，没有输入，就默认文件名，同名覆盖\n"
             "        -a  --author            显示的博主名字，名字后面需要跟随自己的github页面或其他网址，第一次使用时需要指定，后续可以不指定\n"
             "        -c  --classify          文章所属的分类，确保对应的分类存在，否则将不会为其分类\n"
             "        -in --index             指定该文章为index.html中所显示的内容，文章内容垂直居中，此时会无视-o参数\n"
             "        -cs --classifications   指定分类中的类型，最少4个，最多9个，最后一个为默认分类，第一次必须指定\n"
             "        -pr --project           指定该文件为项目的文件，在参数后面需要跟随项目的链接\n"
             "        -ab --about             指定该文章为about.html中显示的内容，此时会无视-o参数\n"
+            "        -r --remove             删除指定文章，若文章属于项目，该项目也会被删除\n"
             "        --has                   指定已经存在的博客文件夹的路径，若是没有指定，则会新建博客，指定后，后续都会用这个目录\n"
             "\n"
             "该程序必须要在有安装git的环境下使用，以克隆对应的博客模板，从而进行修改\n"
@@ -48,7 +49,9 @@ void console_util::gitClone() {
     system("git clone https://github.com/Ascmee/blog_template.git");
     fileInfo.dir_path = "blog_template";
     fileInfo.hasDir = false;
-    file_util::writeTo("cache\\has.txt",fileInfo.dir_path);
+    if (!file_util::hasDir("cache"))
+        system("mkdir cache");
+    file_util::writeTo("cache\\has.txt", fileInfo.dir_path);
 }
 
 void console_util::matchParameter() {
@@ -86,11 +89,19 @@ void console_util::matchParameter() {
                 cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[14]] << "不能一起使用"
                      << "\033[0m";
                 exit(-1);
+            } else if (contain_parameters.count(18)) {
+                cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[18]] << "不能一起使用"
+                     << "\033[0m";
+                exit(-1);
             }
         }
         if (contain_parameters.count(12)) {
             if (contain_parameters.count(14)) {
                 cerr << "\033[31m" << _argv[contain_parameters[12]] << "与" << _argv[contain_parameters[14]] << "不能一起使用"
+                     << "\033[0m";
+                exit(-1);
+            } else if (contain_parameters.count(18)) {
+                cerr << "\033[31m" << _argv[contain_parameters[12]] << "与" << _argv[contain_parameters[18]] << "不能一起使用"
                      << "\033[0m";
                 exit(-1);
             }
@@ -104,6 +115,24 @@ void console_util::matchParameter() {
                 cerr << "\033[31m" << _argv[contain_parameters[14]] << "与" << _argv[contain_parameters[6]] << "不能一起使用"
                      << "\033[0m";
                 exit(-1);
+            } else if (contain_parameters.count(18)) {
+                cerr << "\033[31m" << _argv[contain_parameters[14]] << "与" << _argv[contain_parameters[18]] << "不能一起使用"
+                     << "\033[0m";
+                exit(-1);
+            }
+        }
+        if (contain_parameters.count(18)) {
+            if (contain_parameters.count(2)) {
+                cerr << "\033[31m" << _argv[contain_parameters[18]] << "与" << _argv[contain_parameters[2]] << "不能一起使用"
+                     << "\033[0m";
+                exit(-1);
+            } else if (contain_parameters.count(6)) {
+                cerr << "\033[31m" << _argv[contain_parameters[18]] << "与" << _argv[contain_parameters[6]] << "不能一起使用"
+                     << "\033[0m";
+                exit(-1);
+            } else if (!isFile) {
+                cerr << "\033[31m" << "使用" << _argv[contain_parameters[18]] << "参数需要指定文件" << "\033[0m";
+                exit(-1);
             }
         }
         // 进行命令的解析与执行
@@ -115,35 +144,51 @@ void console_util::parseParameter(map<int, int> &contain_parameters, vector<stri
     // has
     if (contain_parameters.count(16)) {
         fileInfo.dir_path = _argv[contain_parameters[16] + 1];
-        if(!file_util::hasDir("cache"))
+        if (!file_util::hasDir("cache"))
             system("mkdir cache");
-        file_util::writeTo("cache\\has.txt",fileInfo.dir_path);
-    } else if(file_util::fileExist("cache\\has.txt"))
+        file_util::writeTo("cache\\has.txt", fileInfo.dir_path);
+    } else if (file_util::fileExist("cache\\has.txt"))
         fileInfo.dir_path = file_util::readFrom("cache\\has.txt");
     else gitClone();
     // output
     if (contain_parameters.count(2))
         fileInfo.output_name = _argv[contain_parameters[2] + 1];
     // author
-    if (contain_parameters.count(4))
+    if (contain_parameters.count(4)) {
         file_util::writeAuthor(_argv[contain_parameters[4] + 1], _argv[contain_parameters[4] + 2]);
+        cout << "信息设置完毕" << endl;
+    }
+    // classifications
+    if (contain_parameters.count(10)) {
+        file_util::writeClassifications(classifications);
+        cout << "分类设置完毕" << endl;
+    }
     // classification
     if (contain_parameters.count(6))
         fileInfo.classification = _argv[contain_parameters[6] + 1];
-    // index
-    if (contain_parameters.count(8))
-        file_util::writeIndex();
-        // classifications
-    else if (contain_parameters.count(10))
-        file_util::writeClassifications(classifications);
-        // projects
-    else if (contain_parameters.count(12))
-        file_util::writeProject(_argv[contain_parameters[12] + 1]);
-        // about
-    else if (contain_parameters.count(14))
-        file_util::writeAbout();
-    else if (isFile)
-        file_util::writeArticles();
+    else if (isFile && contain_parameters.count(14) == 0 && contain_parameters.count(8) == 0)
+        fileInfo.classification = file_util::getDefaultClassification();
+    if (isFile) {
+        // remove
+        if (contain_parameters.count(18)) {
+            file_util::removeFile();
+        } else if (contain_parameters.count(8)) { // index
+            file_util::writeIndex();
+            cout << "文件转换完毕" << endl;
+        } else if (contain_parameters.count(14)) {// about
+            file_util::writeAbout();
+            cout << "文件转换完毕" << endl;
+        } else {
+            // projects
+            if (contain_parameters.count(12)) {
+                file_util::writeProject(_argv[contain_parameters[12] + 1]);
+                cout << "文件转换完毕" << endl;
+            } else {
+                file_util::writeArticles();
+                cout << "文件转换完毕" << endl;
+            }
+        }
+    }
 }
 
 short console_util::checkParameter(map<int, int> &contain_parameters, vector<string> &classifications) {
@@ -154,7 +199,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         LOOP:
         if (i >= _argc - 1)
             break;
-        for (int j = 0; j < 18; j++) {
+        for (int j = 0; j < 20; j++) {
             if (_argv[i] == parameters[j]) {
                 if (parameter || author || has || project) {
                     if (parameter_num == 0) {
@@ -246,7 +291,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         }
     }
 
-    for (int j = 0; j < 18; j++) {
+    for (int j = 0; j < 20; j++) {
         if (_argv[_argc - 1] == parameters[j]) {
             if (parameter || author || has) {
                 if (parameter_num == 0) {
@@ -273,6 +318,9 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
             } else if (j >= 8 && j <= 15) {
                 parameter = true;
                 break;
+            } else if (j == 18 || j == 19) {
+                cerr << "\033[31m" << "参数" << last_parameter << "必须指定文件" << "\033[0m";
+                return status.error;
             }
 
             cerr << "\033[31m" << "参数" << last_parameter << "没有值" << "\033[0m";
@@ -290,8 +338,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
 
     if (has) {
         if (!file_util::isTargetDir(_argv[_argc - 1])) return status.error;
-        if (contain_parameters.count(4) || contain_parameters.count(10))
-            if (!mustHaveFile(contain_parameters)) return status.success;
+        if (!mustHaveFile(contain_parameters)) return status.success;
         cerr << "\033[31m" << "未指定文件" << "\033[0m";
         return status.error;
     }
@@ -356,13 +403,36 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
 
     if (file_util::fileExist(_argv[_argc - 1])) {
         string str(_argv[_argc - 1]);
-        regex r(".{1,}\\.md");
-        if (!regex_match(str, r)) {
-            cerr << "\033[31m" << "文件只能是md格式的" << "\033[0m";
-            return status.error;
+        if (!contain_parameters.count(18)) {
+            regex r(".{1,}\\.md");
+            if (!regex_match(str, r)) {
+                cerr << "\033[31m" << "文件只能是md格式的" << "\033[0m";
+                return status.error;
+            }
+            string path = _argv[_argc - 1];
+            fileInfo.md_path = path;
+            path = path.substr(path.find_last_of('\\') + 1, path.size() - path.find_last_of('\\') - 4);
+            fileInfo.output_name = path;
+            if (!contain_parameters.count(2) && !nameCheck(path.data(), "文件的名字"))
+                return status.error;
+            console_util::isFile = true;
+            return status.success;
+        } else {
+            regex r(".{1,}\\.html");
+            if (!regex_match(str, r)) {
+                cerr << "\033[31m" << "文件只能是html格式的" << "\033[0m";
+                return status.error;
+            }
+            string path = _argv[_argc - 1];
+            fileInfo.md_path = path;
+            path = path.substr(path.find_last_of('\\') + 1, path.size() - path.find_last_of('\\') - 6);
+            fileInfo.output_name = path;
+            if (!contain_parameters.count(2) && !nameCheck(path.data(), "文件的名字"))
+                return status.error;
+            console_util::isFile = true;
+            return status.success;
+
         }
-        console_util::isFile = true;
-        return status.success;
     }
 
     cerr << "\033[31m" << _argv[_argc - 1] << "文件不存在" << "\033[0m";
@@ -371,12 +441,12 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
 
 bool console_util::mustHaveFile(map<int, int> &contain_parameters) {
     if (contain_parameters.count(2) || contain_parameters.count(6) || contain_parameters.count(8) ||
-        contain_parameters.count(12) || contain_parameters.count(14))
+        contain_parameters.count(12) || contain_parameters.count(14) || contain_parameters.count(18))
         return true;
     return false;
 }
 
-bool console_util::nameCheck(char *arg, const string &name) {
+bool console_util::nameCheck(const char *arg, const string &name) {
     string str(arg);
     if (arg[0] == '-') {
         cerr << "\033[31m" << name << "不可以-开头" << "\033[0m";
@@ -425,6 +495,9 @@ bool console_util::nameCheck(char *arg, const string &name) {
                 return false;
             case '{':
                 cerr << "\033[31m" << name << "中不可包含}" << "\033[0m";
+                return false;
+            case '\\':
+                cerr << "\033[31m" << name << "中不可包含\\" << "\033[0m";
                 return false;
         }
     }

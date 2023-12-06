@@ -1,4 +1,5 @@
 #include "data_convert.h"
+#include "name_arr.h"
 #include "string"
 #include <ctime>
 #include <sstream>

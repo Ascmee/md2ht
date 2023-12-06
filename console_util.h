@@ -23,7 +23,7 @@ public:
     static void printHelp();
     static short checkParameter(map<int, int> &contain_parameters, vector<string> &classifications);
     static void parseParameter(map<int, int> &contain_parameters, vector<string>& classifications);
-    static bool nameCheck(char* arg,const string& name);
+    static bool nameCheck(const char* arg,const string& name);
     static bool mustHaveFile(map<int, int> &contain_parameters);
     static void gitClone();
 
@@ -31,7 +31,7 @@ public:
 private:
     static int _argc;
     static char** _argv;
-    static string parameters[18];
+    static string parameters[20];
     static Status status;
     static bool isFile;
 };
