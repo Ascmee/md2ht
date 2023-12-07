@@ -139,7 +139,7 @@ public:
             fileInfo.dir_path.push_back('\\');
         string project_path = fileInfo.dir_path + "index.html";
         string project_read_path = "template\\index.html";
-        parseMd(project_path,project_read_path, true);
+        parseMd(project_path, project_read_path, true);
     }
 
     static void writeClassifications(vector<string> &classifications) {
@@ -195,15 +195,15 @@ public:
         ofstream ofs(project_path, ios::out);
         name_arr na;
         string n;
-        regex naregex("title:\\s{0,}\"" + fileInfo.output_name + "\"");
+        regex r("\\s{0,}var\\s{0,}project_name_arr\\s{0,}=\\s{0,}\\[.{0,}\\];\\s{0,}");
         bool written = false;
         if (lines[0].find("var project_name_arr = [];") != -1) {
             ofs << "var project_name_arr = [" << endl << "  { date: \"" << get_time(na) << "\", title: \""
                 << changeToUTF8(fileInfo.output_name)
-                << "\", href: \"" << url << "\" }," << endl << "];" << endl;
-        } else {
+                << "\", href: \"" << url << "\" }," << endl << "];";
+        } else if (!regex_match(lines[0], r)) {
             for (const string &line: lines) {
-                if(line.find("title: \"") != -1) {
+                if (line.find("title: \"") != -1) {
                     n = line.substr(line.find("title: \"") + 8);
                     n = n.substr(0, n.find('\"'));
                 } else n = line;
@@ -215,10 +215,17 @@ public:
                 }
                 if (!written && line.find("];") != -1)
                     ofs << "  { date: \"" << get_time(na) << "\", title: \"" << changeToUTF8(fileInfo.output_name)
-                        << "\", href: \"" << url << "\" }," << endl << "];" << endl;
+                        << "\", href: \"" << url << "\" }," << endl << "];";
                 else
                     ofs << line << endl;
             }
+        } else {
+            int begin = lines[0].find('[');
+            ofs << "var project_name_arr = [" << endl << "  "
+                << lines[0].substr(begin + 1, lines[0].find_last_of('}') - begin)
+                << "," << endl << "  { date: \"" << get_time(na) << "\", title: \""
+                << changeToUTF8(fileInfo.output_name)
+                << "\", href: \"" << url << "\" }," << endl << "];";
         }
         ofs.close();
         writeArticles();
@@ -236,7 +243,7 @@ public:
         if (*(fileInfo.dir_path.end() - 1) != '\\')
             fileInfo.dir_path.push_back('\\');
         string command = "mkdir " + fileInfo.dir_path + "articles";
-        if(!hasDir(fileInfo.dir_path + "articles"))
+        if (!hasDir(fileInfo.dir_path + "articles"))
             system(command.c_str());
         string project_path = fileInfo.dir_path + "articles\\" + fileInfo.output_name + ".html";
         modifiedArticles();
@@ -254,7 +261,7 @@ public:
         ifs.close();
         ofstream ofs(project_path, ios::out);
         for (const string &line: lines) {
-            if(line.find("title: \"") != -1) {
+            if (line.find("title: \"") != -1) {
                 n = line.substr(line.find("title: \"") + 8);
                 n = n.substr(0, n.find('\"'));
             } else n = line;
@@ -270,7 +277,7 @@ public:
         iifs.close();
         ofstream oofs(project_path, ios::out);
         for (const string &line: lines) {
-            if(line.find("title: \"") != -1) {
+            if (line.find("title: \"") != -1) {
                 n = line.substr(line.find("title: \"") + 8);
                 n = n.substr(0, n.find('\"'));
             } else n = line;
@@ -280,6 +287,14 @@ public:
         oofs.close();
         string fileP = fileInfo.dir_path + "articles\\" + fileInfo.output_name + ".html";
         remove(fileP.c_str());
+        
+        string dir_picture = fileInfo.dir_path + "image\\" + fileInfo.output_name;
+        if(hasDir(dir_picture)) {
+            string p = "del /Q /F " + dir_picture;
+            system(p.c_str());
+            p = "rmdir " + dir_picture;
+            system(p.c_str());
+        }
         cout << "文件已删除" << endl;
     }
 
@@ -296,6 +311,7 @@ public:
         ifs.close();
         ofstream ofs(project_path, ios::out);
         name_arr na;
+        regex r("\\s{0,}var\\s{0,}name_arr\\s{0,}=\\s{0,}\\[.{0,}\\];\\s{0,}");
         string n;
         bool written = false;
         if (lines[0].find("var name_arr = [];") != -1) {
@@ -306,9 +322,9 @@ public:
             for (int i = 1; i < lines.size(); i++) {
                 ofs << lines[i] << endl;
             }
-        } else {
+        } else if (!regex_match(lines[0], r)) {
             for (const string &line: lines) {
-                if(line.find("title: \"") != -1) {
+                if (line.find("title: \"") != -1) {
                     n = line.substr(line.find("title: \"") + 8);
                     n = n.substr(0, n.find('\"'));
                 } else n = line;
@@ -326,10 +342,20 @@ public:
                         << changeToUTF8(fileInfo.classification) << "\" },"
                         << endl << "];" << endl;
 
-                else if(line == *(lines.end() - 1))
+                else if (line == *(lines.end() - 1))
                     ofs << line;
                 else
                     ofs << line << endl;
+            }
+        } else {
+            int begin = lines[0].find('[');
+            ofs << "var name_arr = [" << endl << "  " << lines[0].substr(begin + 1, lines[0].find_last_of('}') - begin)
+                << "," << endl << "  { date: \"" << get_time(na) << "\", title: \""
+                << changeToUTF8(fileInfo.output_name) << "\", classification: \""
+                << changeToUTF8(fileInfo.classification) << "\" }," << endl
+                << "];" << endl;
+            for (int i = 1; i < lines.size(); i++) {
+                ofs << lines[i] << endl;
             }
         }
         ofs.close();
@@ -382,7 +408,7 @@ public:
         for (const string &line: htmllines) {
             ofs << line << endl;
             if (regex_match(line, startHtml)) {
-                writeLines(lines, ofs,root_is);
+                writeLines(lines, ofs, root_is);
             } else if (regex_match(line, startTime)) {
                 name_arr na;
                 string t = get_time(na);
@@ -417,6 +443,40 @@ public:
         exit(-1);
     }
 
+    static bool isEscapesUse(const char &c) {
+        switch (c) {
+            case '<':
+            case '>':
+            case '.':
+            case '\'':
+            case '\"':
+            case ':':
+            case '|':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case '-':
+            case '_':
+            case '+':
+            case '=':
+            case '(':
+            case ')':
+            case '*':
+            case '&':
+            case '^':
+            case '$':
+            case '#':
+            case '!':
+            case '~':
+            case '`':
+                return true;
+            default:
+                return false;
+        }
+        return false;
+    }
+
     static string deleteEscapes(const string &line, vector<char> &pop_parameter) {
         string s = line;
         for (int i = 0; i < s.size() - 1; i++) {
@@ -429,17 +489,19 @@ public:
     }
 
     static string recoverEscapes(const string &line, vector<char> &pop_parameter, int index = 0, int begin = -1,
-                                 bool delete_parameter = false) {
+                                 bool delete_parameter = false, bool delete_is = true) {
         string result = line;
         int nownum = 0;
         if (begin == -1) {
             begin = line.size() - 1;
         }
         vector<char>::iterator it = pop_parameter.end() - 1;
+
         for (int i = line.size() - 1; i >= index; i--) {
             if (line[i] == '\\') {
                 if (i <= begin) {
-                    result.insert(result.begin() + i + 1, *it);
+                    if (delete_is && isEscapesUse(*it)) result[i] = *it;
+                    else result.insert(result.begin() + i + 1, *it);
                     if (delete_parameter) {
                         pop_parameter.erase(it);
                         it = pop_parameter.end() - nownum - 1;
@@ -467,17 +529,39 @@ public:
         temp = recoverEscapes(temp, pop_parameter, i1, i3, true);
         string alt = temp.substr(i1 + 2, i2 - i1 - 2);
         string src = temp.substr(i2 + 2, i3 - i2 - 2 + num);
+
         if (*(fileInfo.dir_path.end() - 1) != '\\')
             fileInfo.dir_path.push_back('\\');
-        string des = src.substr(src.find_last_of('\\') + 1);
-        int index = fileInfo.md_path.find_last_of('\\');
-        if (src.find(':') == -1 && index != -1) {
-            src = fileInfo.md_path.substr(0, index + 1) + src;
+        string t = src.substr(src.find_last_of('\\') + 1);
+        string st = src;
+        if (src.find(':') == -1) {
+            string path_img = fileInfo.md_path;
+            st = path_img.substr(0, path_img.find_last_of('\\') + 1) + st;
+            src = path_img.substr(0, path_img.find_last_of('\\') + 1) + changeToGBK(src);
+            for (char &c: src) {
+                if (c == '/') {
+                    c = '\\';
+                }
+            }
+            for (char &c: st) {
+                if (c == '/') {
+                    c = '\\';
+                }
+            }
         }
         ifstream ifs(src, ios::in | ios::binary);
         if (*(fileInfo.dir_path.end() - 1) != '\\')
             fileInfo.dir_path.push_back('\\');
-        des = fileInfo.dir_path + "image\\" + des;
+        for (char &c: t) {
+            if (c == '/') {
+                c = '\\';
+            }
+        }
+        string lp = "mkdir " + fileInfo.dir_path + "image\\" + fileInfo.output_name;
+        if (!hasDir(fileInfo.dir_path + "image\\" + fileInfo.output_name))
+            system(lp.c_str());
+        string des = fileInfo.dir_path + "image\\" + fileInfo.output_name + "\\" +
+                     changeToGBK(t.substr(t.find_last_of('\\') + 1));
         ofstream ofs(des, ios::out | ios::binary);
         int i;
         if (ifs.is_open()) {
@@ -490,10 +574,10 @@ public:
         ifs.close();
         ofs.close();
         if (root_is)
-            des = "image/" + src.substr(src.find_last_of('\\') + 1);
+            des = "image/" + changeToUTF8(fileInfo.output_name) + "/" + st.substr(st.find_last_of('\\') + 1);
         else
-            des = "../image/" + src.substr(src.find_last_of('\\') + 1);
-        line = line.substr(0, i1) + "<img src=\"" + des + "\" alt=\"" + alt + "\" />" + line.substr(i3 + 1);
+            des = "../image/" + changeToUTF8(fileInfo.output_name) + "/" + st.substr(st.find_last_of('\\') + 1);
+        line = line.substr(0, i1) + "</p><img src=\"" + des + "\" alt=\"" + alt + "\" /><p>" + line.substr(i3 + 1);
         mkit++;
         mkit++;
     }
@@ -501,17 +585,18 @@ public:
     static void
     copyImageAsImg(string &line, map<int, string>::iterator &mkit, vector<char> &pop_parameter, bool root_is) {
         string temp = line;
+        bool is_begin = false;
         int i2 = mkit->first, i1 = (--mkit)->first, num = 0, beginN = -1, endN = -1;
         for (int i = i1; i < i2; i++) {
-            if (temp.substr(i, 5) == "src=\"") {
+            if (!is_begin && temp.substr(i, 5) == "src=\"") {
                 beginN = i + 5;
                 i += 5;
+                is_begin = true;
             } else if (temp[i] == '\"') {
                 endN = i - 1;
                 break;
             }
         }
-
 
         for (int i = beginN; i <= endN; i++) {
             if (line[i] == '\\') num++;
@@ -522,15 +607,37 @@ public:
 
         if (*(fileInfo.dir_path.end() - 1) != '\\')
             fileInfo.dir_path.push_back('\\');
-        string des = src.substr(src.find_last_of('\\') + 1);
-        int index = fileInfo.md_path.find_last_of('\\');
-        if (src.find(':') == -1 && index != -1) {
-            src = fileInfo.md_path.substr(0, index + 1) + src;
+
+        string t = src.substr(src.find_last_of('\\') + 1);
+        string st = src;
+        if (src.find(':') == -1) {
+            string path_img = fileInfo.md_path;
+            st = path_img.substr(0, path_img.find_last_of('\\') + 1) + st;
+            src = path_img.substr(0, path_img.find_last_of('\\') + 1) + changeToGBK(src);
+            for (char &c: src) {
+                if (c == '/') {
+                    c = '\\';
+                }
+            }
+            for (char &c: st) {
+                if (c == '/') {
+                    c = '\\';
+                }
+            }
         }
         ifstream ifs(src, ios::in | ios::binary);
         if (*(fileInfo.dir_path.end() - 1) != '\\')
             fileInfo.dir_path.push_back('\\');
-        des = fileInfo.dir_path + "image\\" + des;
+        for (char &c: t) {
+            if (c == '/') {
+                c = '\\';
+            }
+        }
+        string lp = "mkdir " + fileInfo.dir_path + "image\\" + fileInfo.output_name;
+        if (!hasDir(fileInfo.dir_path + "image\\" + fileInfo.output_name))
+            system(lp.c_str());
+        string des = fileInfo.dir_path + "image\\" + fileInfo.output_name + "\\" +
+                     changeToGBK(t.substr(t.find_last_of('\\') + 1));
         ofstream ofs(des, ios::out | ios::binary);
         int i;
         if (ifs.is_open()) {
@@ -543,10 +650,12 @@ public:
         ifs.close();
         ofs.close();
         if (root_is)
-            des = "image/" + src.substr(src.find_last_of('\\') + 1);
+            des = "image/" + changeToUTF8(fileInfo.output_name) + "/" + st.substr(st.find_last_of('\\') + 1);
         else
-            des = "../image/" + src.substr(src.find_last_of('\\') + 1);
-        line = line.substr(0, beginN) + des + line.substr(endN + 1);
+            des = "../image/" + changeToUTF8(fileInfo.output_name) + "/" +
+                  st.substr(st.find_last_of('\\') + 1);// "1 2"3 4/5>6
+        line = line.substr(0, i1) + "</p>" + line.substr(i1, beginN - i1) + des +
+               line.substr(endN + 1, i2 - endN + 1) + "<p>" + line.substr(i2 + 2);
         mkit++;
         mkit++;
     }
@@ -858,7 +967,7 @@ public:
                                                         markdown_keywords[i - r[i]] != ">" &&
                                                         markdown_keywords[i - r[i]] != "/>" &&
                                                         markdown_keywords[i - r[i]] != "</font>"))) {
-                line = line.substr(0, i) + "&rt;" + line.substr(i + 1);
+                line = line.substr(0, i) + "&gt;" + line.substr(i + 1);
                 selectMarkdown(line, i - 1, markdown_keywords, l, r, lit, rit, mkit, pop_parameter, root_is);
                 break;
             }
@@ -899,8 +1008,8 @@ public:
         regex tableH("\\s{0,}(\\|.{1,}){1,}\\|\\s{0,}");
         regex tableN("\\s{0,}(\\|\\s{0,}-{1,}\\s{0,}){1,}\\|\\s{0,}");
         regex tableB("\\s{0,}(\\|.{1,}){1,}\\|\\s{0,}");
-        regex codelinesStart("`{3,}.{1,}");
-        regex codelinesEnd("`{3,}");
+        regex codelinesStart("\\s{0,}`{3,}.{1,}");
+        regex codelinesEnd("\\s{0,}`{3,}\\s{0,}");
         regex lineSelect("(\\*|\\+|-)(\\1){2,}");
         regex header("#{1,6}\\s.{1,}");
         regex quoteblock("\\s{0,}>\\s.{0,}");
@@ -913,6 +1022,7 @@ public:
         string result;
         map<int, vector<char>> pops;
         int continue_blank = 0;
+        string TOC = setTOC(lines, root_is);
         // 删除转义符转义后的字符
         for (int i = 0; i < lines.size(); i++) {
             if (!regex_match(lines[i], blankline)) {
@@ -921,11 +1031,10 @@ public:
         }
         // 转化markdown
         for (int i = 0; i < lines.size(); i++) {
-            if(!regex_match(lines[i],blankline)){
+            if (!regex_match(lines[i], blankline)) {
                 continue_blank = 0;
             }
-            
-            
+
             if (regex_match(lines[i], tableH)) {
                 vector<string> contents;
                 int header_num = getLineNum(lines[i]);
@@ -939,18 +1048,33 @@ public:
                             contents.push_back(lines[j]);
                         } else break;
                     }
-                    tableProcess(ofs, contents, i, pops,root_is);
+                    tableProcess(ofs, contents, i, pops, root_is);
                     i += row_num;
                     row_num = 0;
                 } else {
-                    ofs << "<p>" << writeLine(lines[i], pops[i],root_is) << "</p>" << endl;
+                    ofs << "<p>" << writeLine(lines[i], pops[i], root_is) << "</p>" << endl;
                 }
             } else if (regex_match(lines[i], codelinesStart)) {
                 vector<string> codes;
-                int code_num = getNumofCharfromPos(lines[i], '`', 0);
+                int blank_num = getNumofCharfromPos(lines[i], ' ', 0);
+                int code_num = getNumofCharfromPos(lines[i], '`', blank_num);
                 for (int j = i + 1; j < lines.size(); j++) {
-                    if (regex_match(lines[j], codelinesEnd) && code_num == getNumofCharfromPos(lines[j], '`', 0)) break;
+                    if (regex_match(lines[j], codelinesEnd) &&
+                        code_num == getNumofCharfromPos(lines[j], '`', blank_num))
+                        break;
                     row_num++;
+                    lines[j] = recoverEscapes(lines[j], pops[j]);
+                    lines[j] = lines[j].substr(blank_num);
+
+                    for (int m = lines[j].size() - 1; m >= 0; m--) {
+                        if (lines[j][m] == '<') {
+                            lines[j] = lines[j].substr(0, m) + "&lt;" + lines[j].substr(m + 1);
+                        } else if (lines[j][m] == '>') {
+                            lines[j] = lines[j].substr(0, m) + "&gt;" + lines[j].substr(m + 1);
+                        } else if (lines[j][m] == '&') {
+                            lines[j] = lines[j].substr(0, m) + "&amp;" + lines[j].substr(m + 1);
+                        }
+                    }
                     codes.push_back(lines[j]);
                 }
                 ofs << writeCode(codes, lines[i].substr(code_num)) << endl;
@@ -959,13 +1083,13 @@ public:
             } else if (regex_match(lines[i], lineSelect)) {
                 ofs << "<hr />" << endl;
             } else if (regex_match(lines[i], header)) {
-                ofs << writeHeader(ofs, lines[i], pops[i],root_is) << endl;
+                ofs << writeHeader(ofs, lines[i], pops[i], root_is) << endl;
             } else if (regex_match(lines[i], quoteblock)) {
-                ofs << writeBlockquote(lines[i], pops[i],root_is) << endl;
+                ofs << writeBlockquote(lines[i], pops[i], root_is) << endl;
             } else if (regex_match(lines[i], selectbox)) {
-                ofs << writeSelectInput(lines[i], pops[i],root_is) << endl;
+                ofs << writeSelectInput(lines[i], pops[i], root_is) << endl;
             } else if (regex_match(lines[i], content)) {
-                ofs << setTOC(lines) << endl;
+                ofs << TOC << endl;
             } else if (regex_match(lines[i], olistSelect)) {
                 vector<string> ol;
                 ol.push_back(lines[i]);
@@ -975,7 +1099,7 @@ public:
                         ol.push_back(lines[j]);
                     } else break;
                 }
-                ofs << orderlyList(ol, "o", i, pops,root_is) << endl;
+                ofs << orderlyList(ol, "o", i, pops, root_is) << endl;
                 i += row_num;
                 row_num = 0;
             } else if (regex_match(lines[i], ulistSelect)) {
@@ -987,70 +1111,78 @@ public:
                         ul.push_back(lines[j]);
                     } else break;
                 }
-                ofs << orderlyList(ul, "u", i, pops,root_is) << endl;
+                ofs << orderlyList(ul, "u", i, pops, root_is) << endl;
                 i += row_num;
                 row_num = 0;
             } else if (regex_match(lines[i], blankline)) {
                 continue_blank++;
-                if(continue_blank % 2 == 0) ofs << "<br />" << endl;
+                if (continue_blank % 2 == 0) ofs << "<br />" << endl;
             } else {
-                ofs << "<p>" << writeLine(lines[i], pops[i],root_is) << "</p>" << endl;
+                ofs << "<p>" << writeLine(lines[i], pops[i], root_is) << "</p>" << endl;
             }
         }
     }
 
     static void tableProcess(ofstream &ofs, vector<string> v1, int start, map<int, vector<char>> &pops, bool root_is) {
         vector<int> pos_124;
-        vector<string> substr_arr;
         vector<string>::iterator it = v1.begin();
-        int row = v1.size(), now = 0;
+        int row = v1.size(), now = -1, escape_num = 0, lastnum = 0;
+        map<int, vector<char>> pop_table;
         ofs << "<div class=\"content-table-class\">" << endl
             << "<table>" << endl;
-        for (int j = 0; j < v1.at(0).length(); ++j) {
-            if (v1.at(0).at(j) == '|') {
-                pos_124.push_back(j);
-            }
-        }
-        for (int j = 0; j < pos_124.size() - 1; ++j) {
-            string sub_str = v1[0].substr(pos_124[j] + 1, (pos_124[j + 1] - pos_124[j] - 1));
-            substr_arr.push_back(writeLine(sub_str, pops[start + now++],root_is));
-        }
+
+
         ofs << "<thead>" << endl
             << "<tr>";
-        for (const auto &i: substr_arr) {
-            ofs << "<th>" << endl << i << endl << "</th>" << endl;
+
+        for (int j = 0; j < v1.at(0).length(); ++j) {
+            if (v1[0][j] == '\\') {
+                pop_table[now].push_back(pops[start][escape_num++]);
+            }
+            if (v1.at(0).at(j) == '|') {
+                pos_124.push_back(j);
+                now++;
+
+            }
         }
-        now++;
+
+        for (int j = 0; j < pos_124.size() - 1; ++j) {
+            string sub_str = v1[0].substr(pos_124[j] + 1, (pos_124[j + 1] - pos_124[j] - 1));
+            ofs << "<th>" << writeLine(sub_str, pop_table[j], root_is) << "</th>" << endl;
+        }
 
         ofs << "</tr>" << endl
             << "</thead>";
-        substr_arr.clear();
+        escape_num = 0;
         pos_124.clear();
         ofs << "<tbody>" << endl;
         for (int i = 2; i < row; ++i) {
+            lastnum = now;
+            now--;
             for (int j = 0; j < v1.at(i).length(); ++j) {
+                if (v1[i][j] == '\\') {
+                    pop_table[now].push_back(pops[start + i][escape_num++]);
+                }
                 if (v1.at(i).at(j) == '|') {
                     pos_124.push_back(j);
+                    now++;
                 }
             }
+            escape_num = 0;
+            ofs << "<tr>" << endl;
             for (int j = 0; j < pos_124.size() - 1; ++j) {
                 string sub_str = v1[i].substr(pos_124[j] + 1, (pos_124[j + 1] - pos_124[j] - 1));
-                substr_arr.push_back(writeLine(sub_str, pops[start + now++],root_is));
+                ofs << "<td>" << writeLine(sub_str, pop_table[lastnum + j], root_is) << "</td>" << endl;
             }
-            ofs << "<tr>" << endl;
-            for (const auto &j: substr_arr) {
-                ofs << "<td>" << endl << j << endl << "</td>" << endl;
-            }
-            ofs << "</tr>" << endl;
-            substr_arr.clear();
             pos_124.clear();
         }
+
         ofs << "</tbody>" << endl;
         ofs << "</table>" << endl
             << "</div>" << endl;
     }
 
-    static string writeHeader(ofstream &ofs, string &line, vector<char> &pop_parameter, bool root_is) {
+    static string writeHeader(ofstream &ofs, const string &line, vector<char> &pop_parameter, bool root_is) {
         regex h1("#\\s.{1,}");
         regex h2("##\\s.{1,}");
         regex h3("###\\s.{1,}");
@@ -1066,38 +1198,38 @@ public:
             nowH3 = nowH1 + "---";
             nowH4 = nowH1 + "----";
             nowH5 = nowH1 + "-----";
-            result = "<h1><a id=\"" + text + "\" href=\"#toc-" + text + "\">" + writeLine(text, pop_parameter,root_is) +
-                     "</a></h1>";
+            result = "<h1><a id=\"" + line.substr(2) + "\" href=\"#toc-" + line.substr(2) + "\">" +
+                     writeLine(text, pop_parameter, root_is) + "</a></h1>";
         } else if (regex_match(line, h2)) {
             text = line.substr(3);
             nowH2 = nowH1 + text + "-";
             nowH3 = nowH2 + "--";
             nowH4 = nowH2 + "---";
             nowH5 = nowH2 + "----";
-            result = "<h2><a id=\"" + nowH1 + text + "\" href=\"#toc-" + nowH1 + text + "\">" +
-                     writeLine(text, pop_parameter,root_is) + "</a></h2>";
+            result = "<h2><a id=\"" + nowH1 + line.substr(3) + "\" href=\"#toc-" + nowH1 + line.substr(3) + "\">" +
+                     writeLine(text, pop_parameter, root_is) + "</a></h2>";
         } else if (regex_match(line, h3)) {
             text = line.substr(4);
             nowH3 = nowH2 + text + "-";
             nowH4 = nowH3 + "--";
             nowH5 = nowH3 + "---";
-            result = "<h3><a id=\"" + nowH2 + text + "\" href=\"#toc-" + nowH2 + text + "\">" +
-                     writeLine(text, pop_parameter,root_is) + "</a></h3>";
+            result = "<h3><a id=\"" + nowH2 + line.substr(4) + "\" href=\"#toc-" + nowH2 + line.substr(4) + "\">" +
+                     writeLine(text, pop_parameter, root_is) + "</a></h3>";
         } else if (regex_match(line, h4)) {
             text = line.substr(5);
             nowH4 = nowH3 + text + "-";
             nowH5 = nowH4 + "--";
-            result = "<h4><a id=\"" + nowH3 + text + "\" href=\"#toc-" + nowH3 + text + "\">" +
-                     writeLine(text, pop_parameter,root_is) + "</a></h4>";
+            result = "<h4><a id=\"" + nowH3 + line.substr(5) + "\" href=\"#toc-" + nowH3 + line.substr(5) + "\">" +
+                     writeLine(text, pop_parameter, root_is) + "</a></h4>";
         } else if (regex_match(line, h5)) {
             text = line.substr(6);
             nowH5 = nowH4 + text + "-";
-            result = "<h5><a id=\"" + nowH4 + text + "\" href=\"#toc-" + nowH4 + text + "\">" +
-                     writeLine(text, pop_parameter,root_is) + "</a></h5>";
+            result = "<h5><a id=\"" + nowH4 + line.substr(6) + "\" href=\"#toc-" + nowH4 + line.substr(6) + "\">" +
+                     writeLine(text, pop_parameter, root_is) + "</a></h5>";
         } else if (regex_match(line, h6)) {
             text = line.substr(7);
-            result = "<h6><a id=\"" + nowH5 + text + "\" href=\"#toc-" + nowH5 + text + "\">" +
-                     writeLine(text, pop_parameter,root_is) + "</a></h6>";
+            result = "<h6><a id=\"" + nowH5 + line.substr(7) + "\" href=\"#toc-" + nowH5 + line.substr(7) + "\">" +
+                     writeLine(text, pop_parameter, root_is) + "</a></h6>";
         }
         return result;
     }
@@ -1111,7 +1243,8 @@ public:
         return len;
     }
 
-    static string orderlyList(vector<string> &lines, const string &c, int start, map<int, vector<char>> &pops, bool root_is) {
+    static string
+    orderlyList(vector<string> &lines, const string &c, int start, map<int, vector<char>> &pops, bool root_is) {
         string split = ". ";
         if (c == "u") {
             regex st("\\s{0,}\\*\\s.{0,}");
@@ -1124,7 +1257,10 @@ public:
         string result;
         int lastLineNum = getNumofCharfromPos(lines[0], ' ', 0), i = -1, nowLineNum = 0;
         string temp = lines[0].substr(lines[0].find(split) + 2);
-        result = "<" + c + "l><li>" + writeLine(temp, pops[start],root_is) + "</li>\n";
+        if (lastLineNum == 3) {
+            result = "<" + c + "l>";
+        }
+        result += "<" + c + "l><li>" + writeLine(temp, pops[start], root_is) + "</li>\n";
         for (string &line: lines) {
             i++;
             if (i == 0) {
@@ -1134,24 +1270,24 @@ public:
             if (line.find(split) != -1) {
                 line = line.substr(line.find(split) + 2);
                 if (nowLineNum - lastLineNum < 3 && nowLineNum - lastLineNum >= 0) {
-                    result += "<li>" + writeLine(line, pops[start + i],root_is) + "</li>\n";
+                    result += "<li>" + writeLine(line, pops[start + i], root_is) + "</li>\n";
                     lastLineNum = nowLineNum;
                 } else if (nowLineNum - lastLineNum >= 3 && nowLineNum - lastLineNum < 4) {
-                    result += "<" + c + "l><li>" + writeLine(line, pops[start + i],root_is) + "</li>\n";
+                    result += "<" + c + "l><li>" + writeLine(line, pops[start + i], root_is) + "</li>\n";
                     lastLineNum = nowLineNum;
                 } else if (nowLineNum < lastLineNum) {
-                    for (i = 1; i <= (lastLineNum - nowLineNum + 1) / 3; i++) {
+                    for (i = 1; i <= lastLineNum - nowLineNum / 3; i++) {
                         result += "</" + c + "l>";
                     }
-                    result += "<li>" + writeLine(line, pops[start + i],root_is) + "</li>";
+                    result += "<li>" + writeLine(line, pops[start + i], root_is) + "</li>";
                     lastLineNum = nowLineNum;
                 }
             } else {
-                result += writeLine(line, pops[start + i],root_is);
+                result += writeLine(line, pops[start + i], root_is);
             }
         }
         if (lastLineNum != 0) {
-            for (i = 1; i <= (lastLineNum + 1) / 3; i++) {
+            for (i = 1; i <= lastLineNum / 3; i++) {
                 result += "</" + c + "l>\n";
             }
         }
@@ -1194,7 +1330,7 @@ public:
             result = "<p><input type=\"checkbox\" /><span class=\"content-checkbox-class\">";
         }
         line = line.substr(line.find("] ") + 2);
-        result += writeLine(line, pop_parameter,root_is);
+        result += writeLine(line, pop_parameter, root_is);
         result += "</span></p>";
         return result;
     }
@@ -1212,12 +1348,12 @@ public:
             } else break;
         }
         line = line.substr(i);
-        result += writeLine(line, pop_parameter,root_is);
+        result += writeLine(line, pop_parameter, root_is);
         result += "</blockquote>";
         return result;
     }
 
-    static string setTOC(const vector<string> &lines) {
+    static string setTOC(const vector<string> &lines, bool root_is) {
         string result;
         regex h1("#\\s.{1,}");
         regex h2("##\\s.{1,}");
@@ -1232,47 +1368,62 @@ public:
         string nowh4 = "----";
         string nowh5 = "-----";
         result = "<ul class=\"toc\">\n";
+        string temp;
+        vector<char> pop_toc;
         for (const string &line: lines) {
+            temp = line;
             if (regex_match(line, h1)) {
-                text = line.substr(2);
+                temp = deleteEscapes(temp, pop_toc);
+                text = temp.substr(2);
                 nowh1 = text + "-";
                 nowh2 = nowh1 + "--";
                 nowh3 = nowh1 + "---";
                 nowh4 = nowh1 + "----";
                 nowh5 = nowh1 + "-----";
                 result = result.append("<li class=\"first\"><a id=\"toc-").append(text).append("\" href=\"#").append(
-                        text).append("\">").append(text).append("</a></li>\n");
+                        text).append("\">").append(writeLine(text, pop_toc, root_is)).append("</a></li>\n");
             } else if (regex_match(line, h2)) {
-                text = line.substr(3);
+                temp = deleteEscapes(temp, pop_toc);
+                text = temp.substr(3);
                 nowh2 = nowh1 + text + "-";
                 nowh3 = nowh2 + "--";
                 nowh4 = nowh2 + "---";
                 nowh5 = nowh2 + "----";
                 result = result.append("<li class=\"second\"><a id=\"toc-").append(nowh1).append(text).append(
-                        "\" href=\"#").append(nowh1).append(text).append("\">").append(text).append("</a></li>\n");
+                        "\" href=\"#").append(nowh1).append(text).append("\">").append(
+                        writeLine(text, pop_toc, root_is)).append("</a></li>\n");
             } else if (regex_match(line, h3)) {
-                text = line.substr(4);
+                temp = deleteEscapes(temp, pop_toc);
+                text = temp.substr(4);
                 nowh3 = nowh2 + text + "-";
                 nowh4 = nowh3 + "--";
                 nowh5 = nowh3 + "---";
                 result = result.append("<li class=\"third\"><a id=\"toc-").append(nowh2).append(text).append(
-                        "\" href=\"#").append(nowh2).append(text).append("\">").append(text).append("</a></li>\n");
+                        "\" href=\"#").append(nowh2).append(text).append("\">").append(
+                        writeLine(text, pop_toc, root_is)).append("</a></li>\n");
             } else if (regex_match(line, h4)) {
-                text = line.substr(5);
+                temp = deleteEscapes(temp, pop_toc);
+                text = temp.substr(5);
                 nowh4 = nowh3 + text + "-";
                 nowh5 = nowh4 + "--";
                 result = result.append("<li class=\"fourth\"><a id=\"toc-").append(nowh3).append(text).append(
-                        "\" href=\"#").append(nowh3).append(text).append("\">").append(text).append("</a></li>\n");
+                        "\" href=\"#").append(nowh3).append(text).append("\">").append(
+                        writeLine(text, pop_toc, root_is)).append("</a></li>\n");
             } else if (regex_match(line, h5)) {
-                text = line.substr(6);
+                temp = deleteEscapes(temp, pop_toc);
+                text = temp.substr(6);
                 nowh5 = nowh4 + text + "-";
                 result = result.append("<li class=\"fifth\"><a id=\"toc-").append(nowh4).append(text).append(
-                        "\" href=\"#").append(nowh4).append(text).append("\">").append(text).append("</a></li>\n");
+                        "\" href=\"#").append(nowh4).append(text).append("\">").append(
+                        writeLine(text, pop_toc, root_is)).append("</a></li>\n");
             } else if (regex_match(line, h6)) {
-                text = line.substr(7);
+                temp = deleteEscapes(temp, pop_toc);
+                text = temp.substr(7);
                 result = result.append("<li class=\"sixth\"><a id=\"toc-").append(nowh5).append(text).append(
-                        "\" href=\"#").append(nowh5).append(text).append("\">").append(text).append("</a></li>\n");
+                        "\" href=\"#").append(nowh5).append(text).append("\">").append(
+                        writeLine(text, pop_toc, root_is)).append("</a></li>\n");
             }
+            pop_toc.clear();
         }
         result += "</ul>\n";
         return result;
@@ -1287,6 +1438,21 @@ public:
         char *str = new char[len + 1];
         memset(str, 0, len + 1);
         WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, len, nullptr, nullptr);
+        string strTemp = str;
+        delete[] wstr;
+        delete[] str;
+        return strTemp;
+    }
+
+    static string changeToGBK(const string &line) {
+        int len = MultiByteToWideChar(CP_UTF8, 0, line.c_str(), -1, nullptr, 0);
+        wchar_t *wstr = new wchar_t[len + 1];
+        memset(wstr, 0, len + 1);
+        MultiByteToWideChar(CP_UTF8, 0, line.c_str(), -1, wstr, len);
+        len = WideCharToMultiByte(CP_ACP, 0, wstr, -1, nullptr, 0, nullptr, nullptr);
+        char *str = new char[len + 1];
+        memset(str, 0, len + 1);
+        WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, len, nullptr, nullptr);
         string strTemp = str;
         delete[] wstr;
         delete[] str;

@@ -156,11 +156,18 @@ void console_util::parseParameter(map<int, int> &contain_parameters, vector<stri
     // author
     if (contain_parameters.count(4)) {
         file_util::writeAuthor(_argv[contain_parameters[4] + 1], _argv[contain_parameters[4] + 2]);
+        cout << "博主: " << file_util::changeToUTF8(_argv[contain_parameters[4] + 1]) << endl;
+        cout << "博主主页: " << file_util::changeToUTF8(_argv[contain_parameters[4] + 2]) << endl;
         cout << "信息设置完毕" << endl;
     }
     // classifications
     if (contain_parameters.count(10)) {
         file_util::writeClassifications(classifications);
+        cout << "已设置分类： ";
+        for(const string &classify: classifications){
+            cout << file_util::changeToUTF8(classify) << " ";
+        }
+        cout << endl;
         cout << "分类设置完毕" << endl;
     }
     // classification
@@ -182,9 +189,14 @@ void console_util::parseParameter(map<int, int> &contain_parameters, vector<stri
             // projects
             if (contain_parameters.count(12)) {
                 file_util::writeProject(_argv[contain_parameters[12] + 1]);
+                cout << "标题: " << file_util::changeToUTF8(fileInfo.output_name) << endl;
+                cout << "分类: " << file_util::changeToUTF8(fileInfo.classification) << endl;
+                cout << "项目地址: " << file_util::changeToUTF8(_argv[contain_parameters[12] + 1]) << endl;
                 cout << "文件转换完毕" << endl;
             } else {
                 file_util::writeArticles();
+                cout << "标题: " << file_util::changeToUTF8(fileInfo.output_name) << endl;
+                cout << "分类: " << file_util::changeToUTF8(fileInfo.classification) << endl;
                 cout << "文件转换完毕" << endl;
             }
         }
