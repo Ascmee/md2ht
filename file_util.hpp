@@ -67,27 +67,11 @@ public:
         }
         // 
         string files[] = {"css\\about.css", "css\\articles.css", "css\\classification.css",
-                          "css\\fonts\\LXGWWenKai-Bold.ttf", "css\\fonts\\LXGWWenKai-Regular.ttf",
-                          "css\\fonts\\LXGWWenKaiMono-Bold.ttf", "css\\fonts\\LXGWWenKaiMono-Regular.ttf",
+                          "css\\font\\LXGWWenKaiLite-Bold.ttf", "css\\font\\LXGWWenKaiLite-Regular.ttf",
+                          "css\\font\\LXGWWenKaiMonoLite-Bold.ttf", "css\\font\\LXGWWenKaiMonoLite-Regular.ttf",
                           "css\\general.css", "css\\index.css", "css\\page.css", "css\\projects.css",
-                          "highlight\\DIGESTS.md", "highlight\\es\\core.js", "highlight\\es\\core.min.js",
-                          "highlight\\es\\highlight.js", "highlight\\es\\highlight.min.js",
-                          "highlight\\es\\package.json", "highlight\\highlight.js", "highlight\\highlight.min.js",
-                          "highlight\\languages\\armasm.min.js", "highlight\\languages\\bash.min.js",
-                          "highlight\\languages\\c.min.js", "highlight\\languages\\cpp.min.js",
-                          "highlight\\languages\\csharp.min.js", "highlight\\languages\\css.min.js",
-                          "highlight\\languages\\go.min.js", "highlight\\languages\\http.min.js",
-                          "highlight\\languages\\java.min.js", "highlight\\languages\\javascript.min.js",
-                          "highlight\\languages\\json.min.js", "highlight\\languages\\kotlin.min.js",
-                          "highlight\\languages\\lua.min.js", "highlight\\languages\\markdown.min.js",
-                          "highlight\\languages\\nginx.min.js", "highlight\\languages\\objectivec.min.js",
-                          "highlight\\languages\\php.min.js", "highlight\\languages\\python.min.js",
-                          "highlight\\languages\\rust.min.js", "highlight\\languages\\shell.min.js",
-                          "highlight\\languages\\sql.min.js", "highlight\\languages\\x86asm.min.js",
-                          "highlight\\languages\\xml.min.js", "highlight\\package.json",
-                          "highlight\\styles\\atom-one-dark-reasonable.min.css", "image\\about.png",
-                          "image\\about_over.png", "image\\articles.png", "image\\articles_over.png",
-                          "image\\classification.png", "image\\classification_over.png",
+                          "image\\about.png", "image\\about_over.png", "image\\articles.png",
+                          "image\\articles_over.png", "image\\classification.png", "image\\classification_over.png",
                           "image\\more.png", "image\\more_over.png", "image\\projects.png",
                           "image\\projects_over.png", "image\\search.png", "image\\search_over.png",
                           "image\\top.png", "image\\top_over.png", "js\\about.js",
@@ -287,9 +271,9 @@ public:
         oofs.close();
         string fileP = fileInfo.dir_path + "articles\\" + fileInfo.output_name + ".html";
         remove(fileP.c_str());
-        
+
         string dir_picture = fileInfo.dir_path + "image\\" + fileInfo.output_name;
-        if(hasDir(dir_picture)) {
+        if (hasDir(dir_picture)) {
             string p = "del /Q /F " + dir_picture;
             system(p.c_str());
             p = "rmdir " + dir_picture;
@@ -497,11 +481,19 @@ public:
         }
         vector<char>::iterator it = pop_parameter.end() - 1;
 
+
         for (int i = line.size() - 1; i >= index; i--) {
             if (line[i] == '\\') {
                 if (i <= begin) {
-                    if (delete_is && isEscapesUse(*it)) result[i] = *it;
-                    else result.insert(result.begin() + i + 1, *it);
+                    if (*it != '$') {
+                        if (delete_is && isEscapesUse(*it)) result[i] = *it;
+                        else result.insert(result.begin() + i + 1, *it);
+                    } else {
+                        if (delete_is) {
+                            result[i] = '\\';
+                            result.insert(result.begin() + i + 1, '$');
+                        } else result.insert(i + 1, "\\$");
+                    }
                     if (delete_parameter) {
                         pop_parameter.erase(it);
                         it = pop_parameter.end() - nownum - 1;
@@ -548,7 +540,7 @@ public:
                     c = '\\';
                 }
             }
-        }
+        } else src = changeToGBK(src);
         ifstream ifs(src, ios::in | ios::binary);
         if (*(fileInfo.dir_path.end() - 1) != '\\')
             fileInfo.dir_path.push_back('\\');
@@ -1018,15 +1010,23 @@ public:
         regex olistSelect("\\s{0,}\\d{1,}\\.\\s.{0,}");
         regex ulistSelect("\\s{0,}(\\*|\\+|-)\\s.{0,}");
         regex blankline("\\s{0,}");
+        regex math("\\$\\$");
         int row_num = 0;
         string result;
         map<int, vector<char>> pops;
         int continue_blank = 0;
+        bool can_delete = true, math_is = false;
         string TOC = setTOC(lines, root_is);
         // 删除转义符转义后的字符
         for (int i = 0; i < lines.size(); i++) {
-            if (!regex_match(lines[i], blankline)) {
+            if (regex_match(lines[i], codelinesEnd)) {
+                can_delete = true;
+            }
+            if (can_delete && !regex_match(lines[i], blankline)) {
                 lines[i] = deleteEscapes(lines[i], pops[i]);
+            }
+            if (regex_match(lines[i], codelinesStart)) {
+                can_delete = false;
             }
         }
         // 转化markdown
@@ -1055,6 +1055,10 @@ public:
                     ofs << "<p>" << writeLine(lines[i], pops[i], root_is) << "</p>" << endl;
                 }
             } else if (regex_match(lines[i], codelinesStart)) {
+                if(i == lines.size() - 1){
+                    cout << lines[i] << endl;
+                    continue;
+                }
                 vector<string> codes;
                 int blank_num = getNumofCharfromPos(lines[i], ' ', 0);
                 int code_num = getNumofCharfromPos(lines[i], '`', blank_num);
@@ -1063,7 +1067,6 @@ public:
                         code_num == getNumofCharfromPos(lines[j], '`', blank_num))
                         break;
                     row_num++;
-                    lines[j] = recoverEscapes(lines[j], pops[j]);
                     lines[j] = lines[j].substr(blank_num);
 
                     for (int m = lines[j].size() - 1; m >= 0; m--) {
@@ -1080,6 +1083,32 @@ public:
                 ofs << writeCode(codes, lines[i].substr(code_num)) << endl;
                 i += row_num + 1;
                 row_num = 0;
+            } else if (regex_match(lines[i], math)) {
+                if(i == lines.size() - 1){
+                    ofs << "<p>\\$\\$</p>" << endl;
+                    continue;
+                }
+                vector<string> math_lines;
+                math_is = true;
+                for (int j = i + 1; j < lines.size(); j++) {
+                    if (!regex_match(lines[j], math)) {
+                        if (j != lines.size() - 1) {
+                            math_lines.push_back(recoverEscapes(lines[j],pops[j]));
+                        } else {
+                            ofs << "<p>\\$\\$</p>" << endl;
+                            math_is = false;
+                        }
+                    } else break;
+                }
+                if(math_is) {
+                    ofs << "<p>$$" << endl;
+                    for (const string &l: math_lines) {
+                        ofs << l << endl;
+                    }
+                    ofs << "$$</p>" << endl;
+                    i += math_lines.size() + 1;
+                }
+                math_is = false;
             } else if (regex_match(lines[i], lineSelect)) {
                 ofs << "<hr />" << endl;
             } else if (regex_match(lines[i], header)) {
