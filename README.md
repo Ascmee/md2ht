@@ -18,7 +18,7 @@
 
 使用-h或--help来获取帮助
 
-**-o**与**--output**参数可以用来指定文章的标题，若是没有指定，则以markdown文件的名字为标题，由于**index.html**与**about.html**都采用了文章的模式，所以可以通过**-in**或**-ab**参数来指定该文件为 index.html或about.html
+**-o**与--**output**参数可以用来指定文章的标题，若是没有指定，则以markdown文件的名字为标题，由于**index.html**与**about.html**都采用了文章的模式，所以可以通过-**in**或-**ab**参数来指定该文件为 index.html或about.html
 
 ```example
 md2ht -o [articles name] [md path]
@@ -32,33 +32,33 @@ md2ht -in [md path]
 md2ht -ab [md path]
 ```
 
-**-c**与**-classify**参数用于指定文章的分类，若是没有使用分类，则使用默认分类
+**-c**与-**classify**参数用于指定文章的分类，若是没有使用分类，则使用默认分类
 
 ```example
 md2ht -c [classifiction] [md path]
 ```
 
-**-pr**与**--project**用于指定该文章为项目，需要指定项目地址
+**-pr**与--**project**用于指定该文章为项目，需要指定项目地址
 
 ```example
 md2ht -pr [url] [md path]
 ```
 
-因为index与about页面的没有标题与分类，所以不可以与**-o**、**-c**、**-pr**参数一起使用
+因为index与about页面的没有标题与分类，所以不可以与-**o**、**-c**、**-pr**参数一起使用
 
-**-cs**与**--classifications**用于设置所有分类，至少为4个，最多为9个，最后一个为默认分类
+**-cs**与--**classifications**用于设置所有分类，至少为4个，最多为9个，最后一个为默认分类
 
 ```example
 md2ht -cs [classification 1]...[classification n]
 ```
 
-**-a**与**--author**用于指定博主的名字与博主的主页地址
+**-a**与--**author**用于指定博主的名字与博主的主页地址
 
 ```example
 md2ht -a [blogger name] [url]
 ```
 
-**-r**与**--remove**用于删除对应的文章
+**-r**与--**remove**用于删除对应的文章
 
 ```example
 md2ht -r [html path]
@@ -72,7 +72,7 @@ md2ht --has [blog dir path]
 
 
 
-本程序会使用git命令，所以环境中要具备git，第一次使用时，推荐先指定分类等信息，程序会利用git下载模板，下载后将blog_template文件夹的名字改为你想要的名字，然后通过**--has**命令指定该文件夹
+本程序会使用git命令，所以环境中要具备git，第一次使用时，推荐先指定分类等信息，程序会利用git下载模板，下载后将blog_template文件夹的名字改为你想要的名字，然后通过--**has**命令指定该文件夹
 
 
 
