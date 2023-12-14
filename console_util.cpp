@@ -1,4 +1,5 @@
 #include <map>
+#include <cstdlib>
 #include "console_util.h"
 #include "file_util.hpp"
 
@@ -19,29 +20,28 @@ void console_util::init(int argc, char **argv) {
 }
 
 void console_util::printHelp() {
-    cout << "Usage: md2ht [options] file\n"
-            "Options:\n"
-            "        -h  --help              显示帮助信息\n"
-            "        -o  --output            文章的标题，没有输入，就默认文件名，同名覆盖\n"
-            "        -a  --author            显示的博主名字，名字后面需要跟随自己的github页面或其他网址，第一次使用时需要指定，后续可以不指定\n"
-            "        -c  --classify          文章所属的分类，确保对应的分类存在，否则将不会为其分类\n"
-            "        -in --index             指定该文章为index.html中所显示的内容，文章内容垂直居中，此时会无视-o参数\n"
-            "        -cs --classifications   指定分类中的类型，最少4个，最多9个，最后一个为默认分类，第一次必须指定\n"
-            "        -pr --project           指定该文件为项目的文件，在参数后面需要跟随项目的链接\n"
-            "        -ab --about             指定该文章为about.html中显示的内容，此时会无视-o参数\n"
-            "        -r --remove             删除指定文章，若文章属于项目，该项目也会被删除\n"
-            "        --has                   指定已经存在的博客文件夹的路径，若是没有指定，则会新建博客，指定后，后续都会用这个目录\n"
-            "\n"
-            "该程序必须要在有安装git的环境下使用，以克隆对应的博客模板，从而进行修改\n"
-            "产生的页面将会在保存在对应的指定的文件夹中对应的位置，由用户将博客上传到自己的服务器或代码托管平台这是将markdown 转化为此博客模板所需的html文件而做的，由于我们学艺不精，所以可能会有错误，如果可以，请向我们提出\n"
-            "声明：本程序开源，博客模板也是开源的，均可以在github上查看到";
+    file_util::cabk(cout, "Usage: md2ht [options] file\n"
+               "Options:\n"
+               "        -h  --help              显示帮助信息\n"
+               "        -o  --output            文章的标题，没有输入，就默认文件名，同名覆盖\n"
+               "        -a  --author            显示的博主名字，名字后面需要跟随自己的github页面或其他网址，第一次使用时需要指定，后续可以不指定\n"
+               "        -c  --classify          文章所属的分类，确保对应的分类存在，否则将不会为其分类\n"
+               "        -in --index             指定该文章为index.html中所显示的内容，文章内容垂直居中，此时会无视-o参数\n"
+               "        -cs --classifications   指定分类中的类型，最少4个，最多9个，最后一个为默认分类，第一次必须指定\n"
+               "        -pr --project           指定该文件为项目的文件，在参数后面需要跟随项目的链接\n"
+               "        -ab --about             指定该文章为about.html中显示的内容，此时会无视-o参数\n"
+               "        -r --remove             删除指定文章，若文章属于项目，该项目也会被删除\n"
+               "        --has                   指定已经存在的博客文件夹的路径，若是没有指定，则会新建博客，指定后，后续都会用这个目录\n"
+               "\n"
+               "该程序必须要在有安装git的环境下使用，以克隆对应的博客模板，从而进行修改\n"
+               "产生的页面将会在保存在对应的指定的文件夹中对应的位置，由用户将博客上传到自己的服务器或代码托管平台这是将markdown 转化为此博客模板所需的html文件而做的，由于我们学艺不精，所以可能会有错误，如果可以，请向我们提出\n"
+               "声明：本程序开源，博客模板也是开源的，均可以在github上查看到");
 }
 
 void console_util::gitClone() {
-    system("cls");
-    if (system("git -v")) {
-        system("cls");
-        cerr << "\033[31m" << "请检查git环境" << "\033[0m";
+    regex git_regex("Git\\cmd");
+    if (regex_search(getenv("path"), git_regex)) {
+        file_util::cabk(cerr, "请检查git环境");
         exit(-1);
     }
     string str = "123";
@@ -74,64 +74,52 @@ void console_util::matchParameter() {
         // 避免命令的冲突
         if (contain_parameters.count(8)) {
             if (contain_parameters.count(2)) {
-                cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[2]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[8]], "与", _argv[contain_parameters[2]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(6)) {
-                cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[6]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[8]], "与", _argv[contain_parameters[6]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(12)) {
-                cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[12]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[8]], "与", _argv[contain_parameters[12]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(14)) {
-                cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[14]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[8]], "与", _argv[contain_parameters[14]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(18)) {
-                cerr << "\033[31m" << _argv[contain_parameters[8]] << "与" << _argv[contain_parameters[18]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[8]], "与", _argv[contain_parameters[18]], "不能一起使用");
                 exit(-1);
             }
         }
         if (contain_parameters.count(12)) {
             if (contain_parameters.count(14)) {
-                cerr << "\033[31m" << _argv[contain_parameters[12]] << "与" << _argv[contain_parameters[14]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[12]], "与", _argv[contain_parameters[14]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(18)) {
-                cerr << "\033[31m" << _argv[contain_parameters[12]] << "与" << _argv[contain_parameters[18]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[12]], "与", _argv[contain_parameters[18]], "不能一起使用");
                 exit(-1);
             }
         }
         if (contain_parameters.count(14)) {
             if (contain_parameters.count(2)) {
-                cerr << "\033[31m" << _argv[contain_parameters[14]] << "与" << _argv[contain_parameters[2]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[14]], "与", _argv[contain_parameters[2]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(6)) {
-                cerr << "\033[31m" << _argv[contain_parameters[14]] << "与" << _argv[contain_parameters[6]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[14]], "与", _argv[contain_parameters[6]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(18)) {
-                cerr << "\033[31m" << _argv[contain_parameters[14]] << "与" << _argv[contain_parameters[18]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[14]], "与", _argv[contain_parameters[18]], "不能一起使用");
                 exit(-1);
             }
         }
         if (contain_parameters.count(18)) {
             if (contain_parameters.count(2)) {
-                cerr << "\033[31m" << _argv[contain_parameters[18]] << "与" << _argv[contain_parameters[2]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[18]], "与", _argv[contain_parameters[2]], "不能一起使用");
                 exit(-1);
             } else if (contain_parameters.count(6)) {
-                cerr << "\033[31m" << _argv[contain_parameters[18]] << "与" << _argv[contain_parameters[6]] << "不能一起使用"
-                     << "\033[0m";
+                file_util::cabk(cerr, _argv[contain_parameters[18]], "与", _argv[contain_parameters[6]], "不能一起使用");
                 exit(-1);
             } else if (!isFile) {
-                cerr << "\033[31m" << "使用" << _argv[contain_parameters[18]] << "参数需要指定文件" << "\033[0m";
+                file_util::cabk(cerr, "使用", _argv[contain_parameters[18]], "参数需要指定文件");
                 exit(-1);
             }
         }
@@ -156,19 +144,19 @@ void console_util::parseParameter(map<int, int> &contain_parameters, vector<stri
     // author
     if (contain_parameters.count(4)) {
         file_util::writeAuthor(_argv[contain_parameters[4] + 1], _argv[contain_parameters[4] + 2]);
-        cout << "博主: " << file_util::changeToUTF8(_argv[contain_parameters[4] + 1]) << endl;
-        cout << "博主主页: " << file_util::changeToUTF8(_argv[contain_parameters[4] + 2]) << endl;
-        cout << "信息设置完毕" << endl;
+        file_util::cabk(cout, "博主: ", file_util::changeToUTF8(_argv[contain_parameters[4] + 1])) << endl;
+        file_util::cabk(cout, "博主主页: ", file_util::changeToUTF8(_argv[contain_parameters[4] + 2])) << endl;
+        file_util::cabk(cout, "信息设置完毕") << endl;
     }
     // classifications
     if (contain_parameters.count(10)) {
         file_util::writeClassifications(classifications);
-        cout << "已设置分类： ";
-        for(const string &classify: classifications){
+        file_util::cabk(cout, "已设置分类： ");
+        for (const string &classify: classifications) {
             cout << file_util::changeToUTF8(classify) << " ";
         }
         cout << endl;
-        cout << "分类设置完毕" << endl;
+        file_util::cabk(cout, "分类设置完毕") << endl;
     }
     // classification
     if (contain_parameters.count(6))
@@ -181,23 +169,23 @@ void console_util::parseParameter(map<int, int> &contain_parameters, vector<stri
             file_util::removeFile();
         } else if (contain_parameters.count(8)) { // index
             file_util::writeIndex();
-            cout << "文件转换完毕" << endl;
+            file_util::cabk(cout, "文件转换完毕") << endl;
         } else if (contain_parameters.count(14)) {// about
             file_util::writeAbout();
-            cout << "文件转换完毕" << endl;
+            file_util::cabk(cout, "文件转换完毕") << endl;
         } else {
             // projects
             if (contain_parameters.count(12)) {
                 file_util::writeProject(_argv[contain_parameters[12] + 1]);
-                cout << "标题: " << file_util::changeToUTF8(fileInfo.output_name) << endl;
-                cout << "分类: " << file_util::changeToUTF8(fileInfo.classification) << endl;
-                cout << "项目地址: " << file_util::changeToUTF8(_argv[contain_parameters[12] + 1]) << endl;
-                cout << "文件转换完毕" << endl;
+                file_util::cabk(cout, "标题: ", file_util::changeToUTF8(fileInfo.output_name)) << endl;
+                file_util::cabk(cout, "分类: ", file_util::changeToUTF8(fileInfo.classification)) << endl;
+                file_util::cabk(cout, "项目地址: ", file_util::changeToUTF8(_argv[contain_parameters[12] + 1])) << endl;
+                file_util::cabk(cout, "文件转换完毕") << endl;
             } else {
                 file_util::writeArticles();
-                cout << "标题: " << file_util::changeToUTF8(fileInfo.output_name) << endl;
-                cout << "分类: " << file_util::changeToUTF8(fileInfo.classification) << endl;
-                cout << "文件转换完毕" << endl;
+                file_util::cabk(cout, "标题: ", file_util::changeToUTF8(fileInfo.output_name)) << endl;
+                file_util::cabk(cout, "分类: ", file_util::changeToUTF8(fileInfo.classification)) << endl;
+                file_util::cabk(cout, "文件转换完毕") << endl;
             }
         }
     }
@@ -215,22 +203,22 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
             if (_argv[i] == parameters[j]) {
                 if (parameter || author || has || project) {
                     if (parameter_num == 0) {
-                        cerr << "\033[31m" << "参数" << last_parameter << "没有值" << "\033[0m";
+                        file_util::cabk(cerr, "参数", last_parameter, "没有值");
                         return status.error;
                     }
 
                     if (author && author_num != 2) {
-                        cerr << "\033[31m" << "参数" << last_parameter << "要有两个值" << "\033[0m";
+                        file_util::cabk(cerr, "参数", last_parameter, "要有两个值");
                         return status.error;
                     }
                 }
                 if (classification && classification_num < 4) {
-                    cerr << "\033[31m" << "参数" << last_parameter << "值最少为4个" << "\033[0m";
+                    file_util::cabk(cerr, "参数", last_parameter, "值最少为4个");
                     return status.error;
                 }
 
                 if (contain_parameters.count(j) == 1) {
-                    cerr << "\033[31m" << "参数" << last_parameter << "不可重复" << "\033[0m";
+                    file_util::cabk(cerr, "参数", last_parameter, "不可重复");
                     return status.error;
                 }
 
@@ -273,20 +261,20 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         } else if (classification) {
             classification_num++;
             if (count(classifications.begin(), classifications.end(), _argv[i])) {
-                cerr << "\033[31m" << "分类不可以重复" << "\033[0m";
+                file_util::cabk(cerr, "分类不可以重复");
                 return status.error;
             }
 
             classifications.emplace_back(_argv[i]);
             if (classification_num > 9) {
-                cerr << "\033[31m" << "分类最多为9个" << "\033[0m";
+                file_util::cabk(cerr, "分类最多为9个");
                 return status.error;
             }
         } else if (project) {
             project = false;
             regex r("https://.{5,}");
             if (!regex_match(_argv[i], r)) {
-                cerr << "\033[31m" << last_parameter << "的值必须是网址" << "\033[0m";
+                file_util::cabk(cerr, last_parameter, "的值必须是网址");
                 return status.error;
             }
         } else if (has) {
@@ -298,7 +286,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
                 author = false;
             else if (!nameCheck(_argv[i], "博主的名字")) return status.error;
         } else {
-            cerr << "\033[31m" << "未知参数" << _argv[i] << "\033[0m";
+            file_util::cabk(cerr, "未知参数", _argv[i]);
             return status.error;
         }
     }
@@ -307,17 +295,17 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         if (_argv[_argc - 1] == parameters[j]) {
             if (parameter || author || has) {
                 if (parameter_num == 0) {
-                    cerr << "\033[31m" << "参数" << last_parameter << "没有值" << "\033[0m";
+                    file_util::cabk(cerr, "参数", last_parameter, "没有值");
                     return status.error;
                 }
             }
             if (classification && classification_num < 4) {
-                cerr << "\033[31m" << "参数" << last_parameter << "值最少为4个" << "\033[0m";
+                file_util::cabk(cerr, "参数", last_parameter, "值最少为4个");
                 return status.error;
             }
 
             if (contain_parameters.count(j) == 1) {
-                cerr << "\033[31m" << "参数" << last_parameter << "不可重复" << "\033[0m";
+                file_util::cabk(cerr, "参数", last_parameter, "不可重复");
                 return status.error;
             }
 
@@ -325,17 +313,17 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
             if (j == 0 || j == 1) {
                 return status.help;
             } else if (j == 10 || j == 11) {
-                cerr << "\033[31m" << "分类最少为4个" << "\033[0m";
+                file_util::cabk(cerr, "分类最少为4个");
                 return status.error;
             } else if (j >= 8 && j <= 15) {
                 parameter = true;
                 break;
             } else if (j == 18 || j == 19) {
-                cerr << "\033[31m" << "参数" << last_parameter << "必须指定文件" << "\033[0m";
+                file_util::cabk(cerr, "参数", last_parameter, "必须指定文件");
                 return status.error;
             }
 
-            cerr << "\033[31m" << "参数" << last_parameter << "没有值" << "\033[0m";
+            file_util::cabk(cerr, "参数", last_parameter, "没有值");
             return status.error;
         }
     }
@@ -343,7 +331,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
     if (project) {
         regex r("https://.{5,}");
         if (!regex_match(_argv[_argc - 1], r)) {
-            cerr << "\033[31m" << last_parameter << "的值必须是网址" << "\033[0m";
+            file_util::cabk(cerr, last_parameter, "的值必须是网址");
             return status.error;
         }
     }
@@ -351,57 +339,57 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
     if (has) {
         if (!file_util::isTargetDir(_argv[_argc - 1])) return status.error;
         if (!mustHaveFile(contain_parameters)) return status.success;
-        cerr << "\033[31m" << "未指定文件" << "\033[0m";
+        file_util::cabk(cerr, "未指定文件");
         return status.error;
     }
 
     if (author) {
         if (author_num == 0) {
             if (!nameCheck(_argv[_argc - 1], "博主的名字")) return status.error;
-            cerr << "\033[31m" << last_parameter << "未指定链接" << "\033[0m";
+            file_util::cabk(cerr, last_parameter, "未指定链接");
             return status.error;
         } else if (author_num == 1) {
             regex r("https://.{5,}");
             if (regex_match(_argv[_argc - 1], r)) {
                 if (!mustHaveFile(contain_parameters)) return status.success;
-                cerr << "\033[31m" << "未指定文件" << "\033[0m";
+                file_util::cabk(cerr, "未指定文件");
                 return status.error;
             }
-            cerr << "\033[31m" << "指定的链接必须以https://开头" << "\033[0m";
+            file_util::cabk(cerr, "指定的链接必须以https://开头");
             return status.error;
         }
     }
 
     if (classification) {
         if (classification_num < 3) {
-            cerr << "\033[31m" << "参数" << last_parameter << "值最少为4个" << "\033[0m";
+            file_util::cabk(cerr, "参数", last_parameter, "值最少为4个");
             return status.error;
         } else if (classification_num >= 9) {
-            cerr << "\033[31m" << "参数" << last_parameter << "值最多为9个" << "\033[0m";
+            file_util::cabk(cerr, "参数", last_parameter, "值最多为9个");
             return status.error;
         } else if (std::count(classifications.begin(), classifications.end(), _argv[_argc - 1])) {
-            cerr << "\033[31m" << "分类不可以重复" << "\033[0m";
+            file_util::cabk(cerr, "分类不可以重复");
             return status.error;
         } else {
             classifications.emplace_back(_argv[_argc - 1]);
             if (contain_parameters.count(2)) {
-                cerr << "\033[31m" << "指定了" << _argv[contain_parameters[2]] << "参数，需要指定文件" << "\033[0m";
+                file_util::cabk(cerr, "指定了", _argv[contain_parameters[2]], "参数，需要指定文件");
                 return status.error;
             } else if (contain_parameters.count(6)) {
-                cerr << "\033[31m" << "指定了" << _argv[contain_parameters[6]] << "参数，需要指定文件" << "\033[0m";
+                file_util::cabk(cerr, "指定了", _argv[contain_parameters[6]], "参数，需要指定文件");
                 return status.error;
             } else if (contain_parameters.count(8)) {
-                cerr << "\033[31m" << "指定了" << _argv[contain_parameters[8]] << "参数，需要指定文件" << "\033[0m";
+                file_util::cabk(cerr, "指定了", _argv[contain_parameters[8]], "参数，需要指定文件");
                 return status.error;
             } else if (contain_parameters.count(12)) {
-                cerr << "\033[31m" << "指定了" << _argv[contain_parameters[12]] << "参数，需要指定文件" << "\033[0m";
+                file_util::cabk(cerr, "指定了", _argv[contain_parameters[12]], "参数，需要指定文件");
                 return status.error;
             } else if (contain_parameters.count(14)) {
-                cerr << "\033[31m" << "指定了" << _argv[contain_parameters[14]] << "参数，需要指定文件" << "\033[0m";
+                file_util::cabk(cerr, "指定了", _argv[contain_parameters[14]], "参数，需要指定文件");
                 return status.error;
             }
             if (!mustHaveFile(contain_parameters)) return status.success;
-            cerr << "\033[31m" << "未指定文件" << "\033[0m";
+            file_util::cabk(cerr, "未指定文件");
             return status.error;
         }
 
@@ -409,7 +397,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
 
     if (parameter && parameter_num == 0) {
         if (!nameCheck(_argv[_argc - 1], "博客的标题名")) return status.error;
-        cerr << "\033[31m" << "未指定文件" << "\033[0m";
+        file_util::cabk(cerr, "未指定文件");
         return status.error;
     }
 
@@ -418,7 +406,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         if (!contain_parameters.count(18)) {
             regex r(".{1,}\\.md");
             if (!regex_match(str, r)) {
-                cerr << "\033[31m" << "文件只能是md格式的" << "\033[0m";
+                file_util::cabk(cerr, "文件只能是md格式的");
                 return status.error;
             }
             string path = _argv[_argc - 1];
@@ -432,7 +420,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         } else {
             regex r(".{1,}\\.html");
             if (!regex_match(str, r)) {
-                cerr << "\033[31m" << "文件只能是html格式的" << "\033[0m";
+                file_util::cabk(cerr, "文件只能是html格式的");
                 return status.error;
             }
             string path = _argv[_argc - 1];
@@ -447,7 +435,7 @@ short console_util::checkParameter(map<int, int> &contain_parameters, vector<str
         }
     }
 
-    cerr << "\033[31m" << _argv[_argc - 1] << "文件不存在" << "\033[0m";
+    file_util::cabk(cerr, _argv[_argc - 1], "文件不存在");
     return status.error;
 }
 
@@ -461,55 +449,55 @@ bool console_util::mustHaveFile(map<int, int> &contain_parameters) {
 bool console_util::nameCheck(const char *arg, const string &name) {
     string str(arg);
     if (arg[0] == '-') {
-        cerr << "\033[31m" << name << "不可以-开头" << "\033[0m";
+        file_util::cabk(cerr, name, "不可以-开头");
         return false;
     }
     for (const char &c: str) {
         switch (c) {
             case '&':
-                cerr << "\033[31m" << name << "中不可包含&" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含&");
                 return false;
             case '?':
-                cerr << "\033[31m" << name << "中不可包含?" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含?");
                 return false;
             case '=':
-                cerr << "\033[31m" << name << "中不可包含=" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含=");
                 return false;
             case '.':
-                cerr << "\033[31m" << name << "中不可包含." << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含.");
                 return false;
             case '/':
-                cerr << "\033[31m" << name << "中不可包含/" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含/");
                 return false;
             case '"':
-                cerr << "\033[31m" << name << "中不可包含\"" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含\"");
                 return false;
             case '\'':
-                cerr << "\033[31m" << name << "中不可包含\'" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含\'");
                 return false;
             case '!':
-                cerr << "\033[31m" << name << "中不可包含!" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含!");
                 return false;
             case '$':
-                cerr << "\033[31m" << name << "中不可包含$" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含$");
                 return false;
             case '^':
-                cerr << "\033[31m" << name << "中不可包含^" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含^");
                 return false;
             case ';':
-                cerr << "\033[31m" << name << "中不可包含;" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含;");
                 return false;
             case '[':
-                cerr << "\033[31m" << name << "中不可包含[" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含[");
                 return false;
             case ']':
-                cerr << "\033[31m" << name << "中不可包含]" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含]");
                 return false;
             case '{':
-                cerr << "\033[31m" << name << "中不可包含}" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含}");
                 return false;
             case '\\':
-                cerr << "\033[31m" << name << "中不可包含\\" << "\033[0m";
+                file_util::cabk(cerr, name, "中不可包含\\");
                 return false;
         }
     }

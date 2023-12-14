@@ -32,6 +32,12 @@ string nowH5 = "-----";
 
 class file_util {
 public:
+    template<typename... MultiT>
+    static ostream& cabk(ostream &out, MultiT &&... args) {
+        (out << ... << changeToGBK(args));
+        return out;
+    }
+    
     static bool fileExist(const string &path) {
         fstream ifs(path, ios::in);
         if (ifs.is_open()) {
@@ -53,7 +59,7 @@ public:
 
     static bool isDir(DIR *&pDIR, char *path) {
         if (!(pDIR = opendir(path))) {
-            cerr << "\033[31m" << "--has的值不是文件夹" << "\033[0m";
+            cabk(cerr, "--has的值不是文件夹");
             return false;
         }
         return true;
@@ -87,7 +93,7 @@ public:
 
         for (string &file: files) {
             if (!fileExist(path_str + file)) {
-                cerr << "\033[31m" << path_str << "中没有" << file << "\033[0m";
+                cabk(cerr,path_str , "中没有" , file);
                 return false;
             }
         }
@@ -279,7 +285,7 @@ public:
             p = "rmdir " + dir_picture;
             system(p.c_str());
         }
-        cout << "文件已删除" << endl;
+        cabk(cout,"文件已删除") << endl;
     }
 
     static void modifiedArticles() {
@@ -416,14 +422,14 @@ public:
         for (string &line: lines) {
             if (line.find("var classification_arr = [") != -1) {
                 if (line.find("var classification_arr = [];") != -1) {
-                    cerr << "\033[31m" << "请设置分类" << "\033[0m";
+                    cabk(cerr,"请设置分类");
                     exit(-1);
                 }
                 line = line.substr(line.find_last_of(',') + 3, line.size() - line.find_last_of(',') - 6);
                 return line;
             }
         }
-        cerr << "\033[31m" << "请设置分类" << "\033[0m";
+        cabk(cerr,"请设置分类");
         exit(-1);
     }
 
@@ -561,7 +567,7 @@ public:
                 ofs.put(i);
             }
         } else {
-            cout << "waring: " << src << "不存在，图片无法加载" << endl;
+            cabk(cout,"waring: " , src , "不存在，图片无法加载") << endl;
         }
         ifs.close();
         ofs.close();
@@ -637,7 +643,7 @@ public:
                 ofs.put(i);
             }
         } else {
-            cout << "waring: " << src << "不存在，图片无法加载" << endl;
+            cabk(cout,"waring: " , src , "不存在，图片无法加载") << endl;
         }
         ifs.close();
         ofs.close();
