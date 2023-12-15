@@ -39,8 +39,17 @@ void console_util::printHelp() {
 }
 
 void console_util::gitClone() {
-    regex git_regex("Git\\cmd");
-    if (regex_search(getenv("path"), git_regex)) {
+    if(file_util::hasDir("blog_template")){
+        if(file_util::isTargetDir("blog_template")){
+            file_util::cabk(cout,"blog_template文件夹已经存在，但是文件夹符合要求，因此以该文件夹为博客文件夹");
+            fileInfo.dir_path = "blog_template";
+            return;
+        }
+        file_util::cabk(cerr,"blog_template文件夹已经存在，但是不符合要求");
+        exit(-1);
+    }
+    regex git_regex("Git\\\\cmd");
+    if (!regex_search(getenv("path"), git_regex)) {
         file_util::cabk(cerr, "请检查git环境");
         exit(-1);
     }
@@ -48,7 +57,6 @@ void console_util::gitClone() {
     str += "5423";
     system("git clone https://github.com/Ascmee/blog_template.git");
     fileInfo.dir_path = "blog_template";
-    fileInfo.hasDir = false;
     if (!file_util::hasDir("cache"))
         system("mkdir cache");
     file_util::writeTo("cache\\has.txt", fileInfo.dir_path);
@@ -169,23 +177,25 @@ void console_util::parseParameter(map<int, int> &contain_parameters, vector<stri
             file_util::removeFile();
         } else if (contain_parameters.count(8)) { // index
             file_util::writeIndex();
-            file_util::cabk(cout, "文件转换完毕") << endl;
+            file_util::cabk(cout, "markdown文件转换完毕") << endl;
         } else if (contain_parameters.count(14)) {// about
             file_util::writeAbout();
-            file_util::cabk(cout, "文件转换完毕") << endl;
+            file_util::cabk(cout, "markdown文件转换完毕") << endl;
         } else {
             // projects
             if (contain_parameters.count(12)) {
                 file_util::writeProject(_argv[contain_parameters[12] + 1]);
+                file_util::cabk(cout, "markdown文件转换完毕") << endl;
+                file_util::cabk(cout,"项目信息：") << endl;
                 file_util::cabk(cout, "标题: ", file_util::changeToUTF8(fileInfo.output_name)) << endl;
                 file_util::cabk(cout, "分类: ", file_util::changeToUTF8(fileInfo.classification)) << endl;
                 file_util::cabk(cout, "项目地址: ", file_util::changeToUTF8(_argv[contain_parameters[12] + 1])) << endl;
-                file_util::cabk(cout, "文件转换完毕") << endl;
             } else {
                 file_util::writeArticles();
+                file_util::cabk(cout, "markdown文件转换完毕") << endl;
+                file_util::cabk(cout,"文章信息：") << endl;
                 file_util::cabk(cout, "标题: ", file_util::changeToUTF8(fileInfo.output_name)) << endl;
                 file_util::cabk(cout, "分类: ", file_util::changeToUTF8(fileInfo.classification)) << endl;
-                file_util::cabk(cout, "文件转换完毕") << endl;
             }
         }
     }

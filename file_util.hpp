@@ -21,7 +21,6 @@ struct File_info {
     string output_name;
     string classification;
     string md_path;
-    bool hasDir = true;
 } fileInfo;
 
 string nowH1 = "-";
@@ -57,7 +56,7 @@ public:
         return true;
     }
 
-    static bool isDir(DIR *&pDIR, char *path) {
+    static bool isDir(DIR *&pDIR, const char *path) {
         if (!(pDIR = opendir(path))) {
             cabk(cerr, "--has的值不是文件夹");
             return false;
@@ -65,7 +64,7 @@ public:
         return true;
     }
 
-    static bool isTargetDir(char *path) {
+    static bool isTargetDir(const char *path) {
         DIR *pDIR;
         if (!isDir(pDIR, path)) {
             closedir(pDIR);
@@ -393,8 +392,11 @@ public:
         ofstream ofs(filepath);
         ifstream iifs(fileInfo.md_path);
         vector<string> lines;
+        file_util::cabk(cout,"正在读取markdown文件...") << endl;
         readLines(iifs, lines);
+        file_util::cabk(cout,"markdown文件读取完毕") << endl;
         iifs.close();
+        file_util::cabk(cout, "正在转换markdown文件...") << endl;
         for (const string &line: htmllines) {
             ofs << line << endl;
             if (regex_match(line, startHtml)) {
@@ -402,8 +404,10 @@ public:
             } else if (regex_match(line, startTime)) {
                 name_arr na;
                 string t = get_time(na);
+                file_util::cabk(cout,"文章时间设置为：") << t << endl;
                 ofs << t.substr(0, t.find_last_of('/')) << endl;
             } else if (regex_match(line, startTitle)) {
+                file_util::cabk(cout,"文章标题为设置为：") << fileInfo.output_name << endl;
                 ofs << changeToUTF8(fileInfo.output_name) << endl;
             }
         }
@@ -469,11 +473,19 @@ public:
 
     static string deleteEscapes(const string &line, vector<char> &pop_parameter) {
         string s = line;
+        int last_index = -1;
         for (int i = 0; i < s.size() - 1; i++) {
             if (s[i] == '\\') {
                 pop_parameter.push_back(s[i + 1]);
-                s = s.substr(0, i + 1) + s.substr(i + 2);
+                if(i < s.size() - 2)
+                    s = s.substr(0, i + 1) + s.substr(i + 2);
+                else 
+                    s = s.substr(0, i + 1);
+                last_index = i + 1;
             }
+        }
+        if(last_index != s.size() - 1 && s[s.size() - 1] == '\\'){
+            pop_parameter.push_back(' ');
         }
         return s;
     }
@@ -1018,6 +1030,8 @@ public:
         regex blankline("\\s{0,}");
         regex math("\\$\\$");
         int row_num = 0;
+        double percent = 0;
+        int now_percent = -1;
         string result;
         map<int, vector<char>> pops;
         int continue_blank = 0;
@@ -1037,6 +1051,12 @@ public:
         }
         // 转化markdown
         for (int i = 0; i < lines.size(); i++) {
+            if((percent = (double)(i + 1) / lines.size()) * 10 >= now_percent + 1){
+                file_util::cabk(cout,"转换进度... ");
+                cout.precision(1);
+                cout << fixed << percent << endl;
+                now_percent++;
+            }
             if (!regex_match(lines[i], blankline)) {
                 continue_blank = 0;
             }
